@@ -170,31 +170,25 @@ public class NetworkHandler extends Thread {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
-        // Variables must be final to be used inside the execute lambda
-        final String finalPingType = pingType;
-        final String finalActualContent = actualContent;
-        final String finalSenderName = senderName;
-        final String finalSenderDiscordId = senderDiscordId;
-
         client.execute(() -> {
-            currentSplashDiscordId = finalSenderDiscordId;
-            String formatted = "§b§l[BSC] §e" + finalSenderName + ": §f" + finalActualContent;
+            currentSplashDiscordId = senderDiscordId;
+            String formatted = "§b§l[BSC] §e" + senderName + ": §f" + actualContent;
             client.player.displayClientMessage(Component.literal(formatted), false);
 
             if (BscConfig.showTitle) {
                 Component titleText;
 
-                if (finalPingType.equalsIgnoreCase("SPLASH")) {
-                    titleText = Component.literal("Splash by " + finalSenderName)
+                if (pingType.equalsIgnoreCase("SPLASH")) {
+                    titleText = Component.literal("Splash by " + senderName)
                             .setStyle(Style.EMPTY.withColor(BscConfig.titleColor));
                 }
                 // Check if the message contains any of the Event keywords
-                else if (finalActualContent.contains("2x Powder") ||
-                        finalActualContent.contains("Gourmand") ||
-                        finalActualContent.contains("Raid") ||
-                        finalActualContent.contains("Raffle") ||
-                        finalActualContent.contains("Together") ||
-                        finalActualContent.contains("Wind")) {
+                else if (actualContent.contains("2x Powder") ||
+                        actualContent.contains("Gourmand") ||
+                        actualContent.contains("Raid") ||
+                        actualContent.contains("Raffle") ||
+                        actualContent.contains("Together") ||
+                        actualContent.contains("Wind")) {
 
                     titleText = Component.literal("§d§lEvent Ping"); // Pink/Purple Title
                 }
@@ -203,7 +197,7 @@ public class NetworkHandler extends Thread {
                 }
 
                 client.gui.setTitle(titleText);
-                client.gui.setSubtitle(Component.literal("§f" + finalActualContent));
+                client.gui.setSubtitle(Component.literal("§f" + actualContent));
                 client.gui.setTimes(10, 70, 20);
             }
 
