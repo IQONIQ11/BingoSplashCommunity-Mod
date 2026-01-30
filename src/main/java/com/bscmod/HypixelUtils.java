@@ -22,17 +22,12 @@ public class HypixelUtils {
 
         Collection<PlayerTeam> teams = scoreboard.getPlayerTeams();
         for (PlayerTeam team : teams) {
-            // Combine prefix and suffix
             String rawLine = team.getPlayerPrefix().getString() + team.getPlayerSuffix().getString();
 
-            // NEW: Strip all color codes (§a, §l, etc.) so we get clean text
-            String cleanLine = ChatFormatting.stripFormatting(rawLine);
+            String text = ChatFormatting.stripFormatting(rawLine);
 
-            // Use .toLowerCase() to be extra safe
-            String text = cleanLine.toLowerCase();
-
-            if (text.contains("ironman")) return "Ironman";
-            if (text.contains("bingo")) return "Bingo";
+            if (text.contains("♲")) return "Ironman";
+            if (text.contains("Ⓑ")) return "Bingo";
         }
 
         return "Classic";
