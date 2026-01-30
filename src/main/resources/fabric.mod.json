@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "bingosplashcommunity",
+	"version": "1.0.0",
+	"name": "BingoSplashCommunity",
+	"description": "Relays @human pings from Discord to Chat",
+	"authors": ["IQONIQ_"],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/bingosplashcommunity/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.bscmod.BingoSplashCommunity"
+		]
+	},
+	"mixins": [
+		"bingosplashcommunity.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
