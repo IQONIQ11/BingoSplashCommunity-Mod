@@ -367,7 +367,7 @@ public class BscScreen extends Screen {
 
     @Override public boolean keyPressed(KeyEvent keyEvent) {
         if (waitingForKey) {
-            if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) BingoSplashCommunity.updateKeybind(InputConstants.UNKNOWN.getValue());
+            if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) BingoSplashCommunity.updateKeybind(null);
             else BingoSplashCommunity.updateKeybind(keyEvent.key());
             waitingForKey = false; BscConfig.save(); return true;
         }

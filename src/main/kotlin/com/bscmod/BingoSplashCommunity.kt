@@ -96,9 +96,13 @@ class BingoSplashCommunity : ClientModInitializer {
 		}
 
 		@JvmStatic
-		fun updateKeybind(keyCode: Int) {
+		fun updateKeybind(keyCode: Int?) {
 			if (settingsKey != null) {
-				settingsKey!!.setKey(InputConstants.getKey(KeyEvent(keyCode, 0, 0)))
+				if(keyCode == null) {
+					settingsKey!!.setKey(InputConstants.UNKNOWN)
+				} else {
+					settingsKey!!.setKey(InputConstants.getKey(KeyEvent(keyCode, 0, 0)))
+				}
 				KeyMapping.resetMapping()
 				Minecraft.getInstance().options.save()
 			}
