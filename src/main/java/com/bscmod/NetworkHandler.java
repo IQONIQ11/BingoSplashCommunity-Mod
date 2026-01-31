@@ -29,8 +29,6 @@ public class NetworkHandler extends Thread {
     @Override
     public void run() {
         connect();
-
-        // Keep the main thread alive while the WebSocket runs in the background
         while (running) {
             try { Thread.sleep(1000); } catch (InterruptedException e) { break; }
         }
@@ -38,12 +36,9 @@ public class NetworkHandler extends Thread {
 
     private void connect() {
         if (!running) return;
-
         client = HttpClient.newHttpClient();
-
         CompletableFuture<WebSocket> wsFuture = client.newWebSocketBuilder()
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
-
         wsFuture.whenComplete((ws, ex) -> {
             if (ex != null) {
                 System.err.println("[BSC] Connection Error: " + ex.getMessage());
@@ -69,53 +64,44 @@ public class NetworkHandler extends Thread {
         @Override
         public void onOpen(WebSocket webSocket) {
             System.out.println("[BSC] Connected to the Websocket!");
-            webSocket.request(1); // Ask for the first message
+            webSocket.request(1);
         }
 
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             String message = data.toString();
-
-            // Ignore the Node.js Keepalive "Pulse" from console logs
             if (message.equals("KEEPALIVE")) {
                 System.out.println("[BSC] Heartbeat received from server.");
             } else {
                 handleMessage(message);
             }
-
-            webSocket.request(1); // Ask for the next message
+            webSocket.request(1);
             return null;
         }
 
         @Override
         public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
-            System.out.println("[BSC] Low-level Ping received.");
             return WebSocket.Listener.super.onPing(webSocket, message);
         }
 
         @Override
         public CompletionStage<?> onPong(WebSocket webSocket, ByteBuffer message) {
-            System.out.println("[BSC] Pong response received.");
             return WebSocket.Listener.super.onPong(webSocket, message);
         }
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            System.out.println("[BSC] Connection closed! Status: " + statusCode + " | Reason: " + reason);
             scheduleReconnect();
             return null;
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
             scheduleReconnect();
         }
     }
 
     private void handleMessage(String message) {
-        System.out.println("Received message: " + message);
-
         if (!BscConfig.receivePings) return;
 
         String[] parts = message.split("\\|", 4);
@@ -128,10 +114,11 @@ public class NetworkHandler extends Thread {
 
         String msgLower = actualContent.toLowerCase();
 
-        // --- THE FIX: ONLY FILTER IF IT IS NOT A SPLASH ---
-        if (!pingType.equalsIgnoreCase("SPLASH")) {
-
-            // --- MINING FILTERS ---
+        if (pingType.equalsIgnoreCase("SPLASH")) {
+            String detectedProfile = HypixelUtils.getProfileType();
+            if (BscConfig.ironmanOnly && !detectedProfile.equalsIgnoreCase("Ironman")) return;
+            if (BscConfig.bingoOnly && !detectedProfile.equalsIgnoreCase("Bingo")) return;
+        } else {
             if (msgLower.contains("synthetic heart") && !BscConfig.syncHeart) return;
             if (msgLower.contains("robotron reflector") && !BscConfig.robotron) return;
             if (msgLower.contains("control switch") && !BscConfig.controlSwitch) return;
@@ -145,28 +132,20 @@ public class NetworkHandler extends Thread {
             if (msgLower.contains("goblin egg") && !BscConfig.goblinEgg) return;
             if (msgLower.contains("flawless gemstone") && !BscConfig.flawlessGem) return;
 
-            // --- EVENT FILTERS ---
             if (msgLower.contains("2x powder") && !BscConfig.powder2x) return;
             if (msgLower.contains("goblin raid") && !BscConfig.goblinRaid) return;
             if (msgLower.contains("raffle") && !BscConfig.raffle) return;
             if (msgLower.contains("better together") && !BscConfig.betterTogether) return;
             if (msgLower.contains("gone with the wind") && !BscConfig.goneWind) return;
             if (msgLower.contains("mithril gourmand") && !BscConfig.mithrilGourmand) return;
-
-            // --- PROFILE FILTERS ---
-            String detectedProfile = HypixelUtils.getProfileType();
-            if (BscConfig.ironmanOnly && !detectedProfile.equalsIgnoreCase("Ironman")) return;
-            if (BscConfig.bingoOnly && !detectedProfile.equalsIgnoreCase("Bingo")) return;
         }
 
-        // --- HUB DETECTION (Always runs) ---
         Matcher matcher = HUB_PATTERN.matcher(actualContent);
         if (matcher.find()) {
             activeLobby = matcher.group(1);
             lastPingTime = System.currentTimeMillis();
         }
 
-        // --- RENDER LOGIC (Title & Chat) ---
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
@@ -177,23 +156,18 @@ public class NetworkHandler extends Thread {
 
             if (BscConfig.showTitle) {
                 Component titleText;
-
                 if (pingType.equalsIgnoreCase("SPLASH")) {
                     titleText = Component.literal("Splash by " + senderName)
                             .setStyle(Style.EMPTY.withColor(BscConfig.titleColor));
-                }
-                // Check if the message contains any of the Event keywords
-                else if (actualContent.contains("2x Powder") ||
+                } else if (actualContent.contains("2x Powder") ||
                         actualContent.contains("Gourmand") ||
                         actualContent.contains("Raid") ||
                         actualContent.contains("Raffle") ||
                         actualContent.contains("Together") ||
                         actualContent.contains("Wind")) {
-
-                    titleText = Component.literal("§d§lEvent Ping"); // Pink/Purple Title
-                }
-                else {
-                    titleText = Component.literal("§6§lItem Found"); // Gold Title for Mining
+                    titleText = Component.literal("§d§lEvent Ping");
+                } else {
+                    titleText = Component.literal("§6§lItem Found");
                 }
 
                 client.gui.setTitle(titleText);
@@ -210,12 +184,11 @@ public class NetworkHandler extends Thread {
     public void disconnect() { closeSocket(); }
 
     private void closeSocket() {
-        if (webSocketClient != null && (webSocketClient.isInputClosed() || webSocketClient.isOutputClosed())) {
+        if (webSocketClient != null) {
             webSocketClient.sendClose(1000, "User requested disconnect");
             webSocketClient = null;
         }
-
-        client.close();
+        if (client != null) client.close();
     }
 
     public void stopListener() {
