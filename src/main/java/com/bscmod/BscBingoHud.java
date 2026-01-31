@@ -179,6 +179,6 @@ public class BscBingoHud {
             d = Duration.between(now, nextMonthStart);
         }
 
-        return String.format("%dd %dh", d.toDays(), d.toHoursPart());
+        return String.format("%dd %dh %dm", d.toDays(), d.toHoursPart(), d.toMinutesPart());
     }
 }
