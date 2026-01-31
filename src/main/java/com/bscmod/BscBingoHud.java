@@ -1,13 +1,16 @@
 package com.bscmod;
 
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 import java.net.URL;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -18,9 +21,17 @@ public class BscBingoHud {
     private static final List<String> goals = new ArrayList<>();
     private static boolean isLoading = false;
     private static final String GOAL_URL = "https://raw.githubusercontent.com/IQONIQ11/bingo-goals/main/goals.txt";
+    private static final ZoneId TARGET_ZONE = ZoneOffset.ofHours(1);
 
     public static void register() {
         fetchGoals();
+
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+            String text = message.getString();
+            if ((text.startsWith("BINGO GOAL COMPLETE!") || text.startsWith("§6BINGO GOAL COMPLETE!")) && !text.contains(": ")) {
+                onChatMessage(text);
+            }
+        });
 
         HudRenderCallback.EVENT.register((context, tickCounter) -> {
             Minecraft client = Minecraft.getInstance();
@@ -32,19 +43,25 @@ public class BscBingoHud {
         });
     }
 
-    // Helper to identify the current month's event
     private static String getSessionKey() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
         return now.getYear() + "-" + now.getMonthValue();
     }
 
     public static void onChatMessage(String text) {
-        if (text.contains("»") && text.contains("Bingo Goal Completed:")) {
+        if (text.contains("BINGO GOAL COMPLETE!")) {
             try {
-                String[] parts = text.split("Completed:");
-                if (parts.length > 1) {
-                    String completedGoal = parts[1].replaceAll("§[0-9a-fk-or]", "").trim();
-                    removeGoal(completedGoal);
+                String cleanText = text.replaceAll("§[0-9a-fk-or]", "").replace("\n", " ");
+                synchronized (goals) {
+                    List<String> toRemove = new ArrayList<>();
+                    for (String goal : goals) {
+                        if (cleanText.toLowerCase().contains(goal.toLowerCase().trim())) {
+                            toRemove.add(goal);
+                        }
+                    }
+                    for (String goal : toRemove) {
+                        removeGoal(goal);
+                    }
                 }
             } catch (Exception ignored) {}
         }
@@ -52,17 +69,13 @@ public class BscBingoHud {
 
     private static void removeGoal(String goalName) {
         synchronized (goals) {
-            String cleanName = goalName.toLowerCase().trim();
-            // 1. Remove from the active RAM list
-            boolean removed = goals.removeIf(goal -> cleanName.contains(goal.toLowerCase().trim()));
+            String cleanName = goalName.trim();
+            goals.removeIf(g -> g.equalsIgnoreCase(cleanName));
 
-            // 2. If successfully removed, save to config so it stays gone
-            if (removed) {
-                if (!BscConfig.completedGoals.contains(cleanName)) {
-                    BscConfig.completedGoals.add(cleanName);
-                    BscConfig.lastBingoSession = getSessionKey();
-                    BscConfig.save(); // Writes to your existing bsc-config.json
-                }
+            if (!BscConfig.completedGoals.contains(cleanName)) {
+                BscConfig.completedGoals.add(cleanName);
+                BscConfig.lastBingoSession = getSessionKey();
+                BscConfig.save();
             }
         }
     }
@@ -73,7 +86,6 @@ public class BscBingoHud {
 
         Util.backgroundExecutor().execute(() -> {
             try {
-                // AUTO-RESET: Wipe the "completed" list if the month has changed
                 String currentSession = getSessionKey();
                 if (!currentSession.equals(BscConfig.lastBingoSession)) {
                     BscConfig.completedGoals.clear();
@@ -89,10 +101,9 @@ public class BscBingoHud {
                         String line = s.nextLine().trim();
                         if (line.isEmpty()) continue;
 
-                        // Only add to the visible HUD if we haven't finished it this month
                         String cleanLine = line.toLowerCase();
                         boolean alreadyDone = BscConfig.completedGoals.stream()
-                                .anyMatch(done -> done.contains(cleanLine));
+                                .anyMatch(done -> done.equalsIgnoreCase(cleanLine));
 
                         if (!alreadyDone) downloadedGoals.add(line);
                     }
@@ -146,15 +157,28 @@ public class BscBingoHud {
     }
 
     private static String getBingoTimerLabel() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime end = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(7);
-        return now.isBefore(end) ? "Bingo Ends: " : "Next Bingo: ";
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
+        ZonedDateTime start = now.withDayOfMonth(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime end = start.plusDays(7);
+
+        return (now.isAfter(start) && now.isBefore(end)) ? "Bingo Ends: " : "Next Bingo: ";
     }
 
     private static String getBingoTimerValue() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime end = now.withDayOfMonth(1).toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(7);
-        Duration d = now.isBefore(end) ? Duration.between(now, end) : Duration.between(now, now.withDayOfMonth(1).plusMonths(1).toLocalDate().atStartOfDay(ZoneOffset.UTC));
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
+        ZonedDateTime start = now.withDayOfMonth(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime end = start.plusDays(7);
+
+        Duration d;
+        if (now.isBefore(start)) {
+            d = Duration.between(now, start);
+        } else if (now.isBefore(end)) {
+            d = Duration.between(now, end);
+        } else {
+            ZonedDateTime nextMonthStart = start.plusMonths(1).withDayOfMonth(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+            d = Duration.between(now, nextMonthStart);
+        }
+
         return String.format("%dd %dh", d.toDays(), d.toHoursPart());
     }
 }
