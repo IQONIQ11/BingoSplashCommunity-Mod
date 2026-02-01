@@ -91,17 +91,21 @@ public class NetworkHandler extends Thread {
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            System.out.println("[BSC] Connection closed! Status: " + statusCode + " | Reason: " + reason);
             scheduleReconnect();
             return null;
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
+            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
             scheduleReconnect();
         }
     }
 
     private void handleMessage(String message) {
+        System.out.println("Received message: " + message);
+
         if (!BscConfig.receivePings) return;
 
         String[] parts = message.split("\\|", 4);
@@ -184,7 +188,7 @@ public class NetworkHandler extends Thread {
     public void disconnect() { closeSocket(); }
 
     private void closeSocket() {
-        if (webSocketClient != null) {
+        if (webSocketClient != null && (webSocketClient.isInputClosed() || webSocketClient.isOutputClosed())) {
             webSocketClient.sendClose(1000, "User requested disconnect");
             webSocketClient = null;
         }

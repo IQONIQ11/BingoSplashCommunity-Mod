@@ -2,11 +2,11 @@ package com.bscmod;
 
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 
 import java.net.URL;
 import java.time.Duration;
@@ -18,10 +18,12 @@ import java.util.List;
 import java.util.Scanner;
 
 public class BscBingoHud {
-    private static final List<String> goals = new ArrayList<>();
+    private static final List<BingoGoal> goals = new ArrayList<>();
     private static boolean isLoading = false;
     private static final String GOAL_URL = "https://raw.githubusercontent.com/IQONIQ11/bingo-goals/main/goals.txt";
     private static final ZoneId TARGET_ZONE = ZoneOffset.ofHours(1);
+
+    private record BingoGoal(String name, String description) {}
 
     public static void register() {
         fetchGoals();
@@ -49,17 +51,17 @@ public class BscBingoHud {
     }
 
     public static void onChatMessage(String text) {
-        if (text.contains("BINGO GOAL COMPLETE!")) {
+        if (text.startsWith("§6§lBINGO GOAL COMPLETE! ")) {
             try {
-                String cleanText = text.replaceAll("§[0-9a-fk-or]", "").replace("\n", " ");
+                String cleanText = ChatFormatting.stripFormatting(text).replace("BINGO GOAL COMPLETE!", "").trim();
                 synchronized (goals) {
-                    List<String> toRemove = new ArrayList<>();
-                    for (String goal : goals) {
-                        if (cleanText.toLowerCase().contains(goal.toLowerCase().trim())) {
+                    List<BingoGoal> toRemove = new ArrayList<>();
+                    for (BingoGoal goal : goals) {
+                        if (cleanText.toLowerCase().contains(goal.name().toLowerCase().trim())) {
                             toRemove.add(goal);
                         }
                     }
-                    for (String goal : toRemove) {
+                    for (BingoGoal goal : toRemove) {
                         removeGoal(goal);
                     }
                 }
@@ -67,10 +69,10 @@ public class BscBingoHud {
         }
     }
 
-    private static void removeGoal(String goalName) {
+    private static void removeGoal(BingoGoal goal) {
         synchronized (goals) {
-            String cleanName = goalName.trim();
-            goals.removeIf(g -> g.equalsIgnoreCase(cleanName));
+            String cleanName = goal.name().trim();
+            goals.removeIf(g -> g.name().equalsIgnoreCase(cleanName));
 
             if (!BscConfig.completedGoals.contains(cleanName)) {
                 BscConfig.completedGoals.add(cleanName);
@@ -94,18 +96,22 @@ public class BscBingoHud {
                 }
 
                 URL url = new URL(GOAL_URL + "?t=" + System.currentTimeMillis());
-                List<String> downloadedGoals = new ArrayList<>();
+                List<BingoGoal> downloadedGoals = new ArrayList<>();
 
                 try (Scanner s = new Scanner(url.openStream())) {
                     while (s.hasNextLine()) {
                         String line = s.nextLine().trim();
                         if (line.isEmpty()) continue;
 
-                        String cleanLine = line.toLowerCase();
-                        boolean alreadyDone = BscConfig.completedGoals.stream()
-                                .anyMatch(done -> done.equalsIgnoreCase(cleanLine));
+                        String[] parts = line.split("\\|", 2);
+                        if(parts.length != 2) continue;
+                        String name = parts[0].trim();
+                        String description = parts[1].trim();
 
-                        if (!alreadyDone) downloadedGoals.add(line);
+                        boolean alreadyDone = BscConfig.completedGoals.stream()
+                                .anyMatch(done -> done.equalsIgnoreCase(name));
+
+                        if (!alreadyDone) downloadedGoals.add(new BingoGoal(name, description));
                     }
                 }
                 synchronized (goals) {
@@ -115,7 +121,7 @@ public class BscBingoHud {
             } catch (Exception e) {
                 synchronized (goals) {
                     goals.clear();
-                    goals.add("§cFetch Failed");
+                    goals.add(new BingoGoal("Error loading goals", "§cFetch Failed"));
                 }
             } finally {
                 isLoading = false;
@@ -135,8 +141,8 @@ public class BscBingoHud {
             } else {
                 context.drawString(textRenderer, "Bingo Goals:", 0, 0, BscConfig.cardTitleColor, true);
                 int offset = 12;
-                for (String goal : goals) {
-                    context.drawString(textRenderer, "§7- §f" + goal, 4, offset, BscConfig.cardTextColor, true);
+                for (BingoGoal goal : goals) {
+                    context.drawString(textRenderer, "§7- §f" + goal.description(), 4, offset, BscConfig.cardTextColor, true);
                     offset += 10;
                 }
             }
