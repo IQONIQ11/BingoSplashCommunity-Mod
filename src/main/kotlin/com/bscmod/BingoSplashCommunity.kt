@@ -10,13 +10,10 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.Game
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.commands.CommandBuildContext
-import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
 class BingoSplashCommunity : ClientModInitializer {
@@ -34,15 +31,6 @@ class BingoSplashCommunity : ClientModInitializer {
 				KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath("bsc", "main"))
 			)
 		)
-
-
-		// 2. Message Listener (Only for System/Game messages)
-		ClientReceiveMessageEvents.GAME.register(Game { message: Component?, overlay: Boolean ->
-			BscBingoHud.onChatMessage(
-				message!!.getString()
-			)
-		})
-
 
 		// 3. Command Registration (Only main config command remains)
 		ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher: CommandDispatcher<FabricClientCommandSource?>?, registryAccess: CommandBuildContext? ->

@@ -28,11 +28,9 @@ public class BscBingoHud {
     public static void register() {
         fetchGoals();
 
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+        ClientReceiveMessageEvents.CHAT.register((message, playerChatMessage, gameProfile, bound, instant) -> {
             String text = message.getString();
-            if ((text.startsWith("BINGO GOAL COMPLETE!") || text.startsWith("§6BINGO GOAL COMPLETE!")) && !text.contains(": ")) {
-                onChatMessage(text);
-            }
+            onChatMessage(text);
         });
 
         HudRenderCallback.EVENT.register((context, tickCounter) -> {
@@ -51,7 +49,7 @@ public class BscBingoHud {
     }
 
     public static void onChatMessage(String text) {
-        if (text.startsWith("§6§lBINGO GOAL COMPLETE! ")) {
+        if (text.startsWith("BINGO GOAL COMPLETE! ")) {
             try {
                 String cleanText = ChatFormatting.stripFormatting(text).replace("BINGO GOAL COMPLETE!", "").trim();
                 synchronized (goals) {
