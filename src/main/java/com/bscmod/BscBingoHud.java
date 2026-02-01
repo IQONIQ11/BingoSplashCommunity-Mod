@@ -28,7 +28,7 @@ public class BscBingoHud {
     public static void register() {
         fetchGoals();
 
-        ClientReceiveMessageEvents.CHAT.register((message, playerChatMessage, gameProfile, bound, instant) -> {
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             String text = message.getString();
             onChatMessage(text);
         });
