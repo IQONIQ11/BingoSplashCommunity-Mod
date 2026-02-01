@@ -2,7 +2,6 @@ package com.bscmod
 
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.brigadier.Command
-import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
@@ -15,9 +14,8 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.Game
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.input.KeyEvent
-import net.minecraft.commands.CommandBuildContext
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class BingoSplashCommunity : ClientModInitializer {
 	override fun onInitializeClient() {
@@ -31,10 +29,9 @@ class BingoSplashCommunity : ClientModInitializer {
 				"key.bsc.settings",
 				InputConstants.Type.KEYSYM,
 				InputConstants.UNKNOWN.value,
-				KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath("bsc", "main"))
+				KeyMapping.Category.register(Identifier.fromNamespaceAndPath("bsc", "main"))
 			)
 		)
-
 
 		// 2. Message Listener (Only for System/Game messages)
 		ClientReceiveMessageEvents.GAME.register(Game { message: Component?, overlay: Boolean ->
@@ -45,7 +42,7 @@ class BingoSplashCommunity : ClientModInitializer {
 
 
 		// 3. Command Registration (Only main config command remains)
-		ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher: CommandDispatcher<FabricClientCommandSource?>?, registryAccess: CommandBuildContext? ->
+		ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher, _ ->
 			dispatcher!!.register(
 				ClientCommandManager.literal("bsc")
 					.executes(Command { context: CommandContext<FabricClientCommandSource?>? ->
