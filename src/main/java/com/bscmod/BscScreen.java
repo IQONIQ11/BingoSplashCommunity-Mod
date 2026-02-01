@@ -24,8 +24,7 @@ public class BscScreen extends Screen {
     private static final String DISCORD_URL = "https://discord.gg/bingo";
     private static final ResourceLocation DISCORD_ICON = ResourceLocation.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/discord.png");
     private static final ResourceLocation MOD_LOGO = ResourceLocation.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/logo.png");
-    private static final ZoneId EST_ZONE = ZoneId.of("America/New_York");
-    private static final ZoneId BINGO_ZONE = ZoneOffset.ofHours(1);
+    private static final ZoneId TARGET_ZONE = ZoneOffset.UTC;
 
     private int x, y, windowWidth, windowHeight;
     private int currentTab = 0;
@@ -149,26 +148,38 @@ public class BscScreen extends Screen {
     }
 
     private String getHypixelResetTimer() {
-        ZonedDateTime now = ZonedDateTime.now(EST_ZONE);
-        Duration d = Duration.between(now, now.toLocalDate().plusDays(1).atStartOfDay(EST_ZONE));
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
+        ZonedDateTime reset = now.toLocalDate().atTime(5, 0).atZone(TARGET_ZONE);
+        if (now.isAfter(reset)) reset = reset.plusDays(1);
+        Duration d = Duration.between(now, reset);
         return String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
     }
 
     private String getUtcResetTimer() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-        Duration d = Duration.between(now, now.toLocalDate().plusDays(1).atStartOfDay(ZoneId.of("UTC")));
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
+        ZonedDateTime reset = now.toLocalDate().atTime(1, 0).atZone(TARGET_ZONE);
+        if (now.isAfter(reset)) reset = reset.plusDays(1);
+        Duration d = Duration.between(now, reset);
         return String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
     }
 
     private String getZooTimer() {
-        ZonedDateTime ref = ZonedDateTime.of(2026, 1, 25, 1, 55, 0, 0, ZoneId.of("UTC"));
-        long now = System.currentTimeMillis();
-        long interval = Duration.ofHours(62).toMillis();
+        ZonedDateTime nowZoned = ZonedDateTime.now(TARGET_ZONE);
+        long nowMillis = nowZoned.toInstant().toEpochMilli();
+        ZonedDateTime ref = ZonedDateTime.of(2026, 2, 1, 18, 55, 0, 0, TARGET_ZONE);
+        long refMillis = ref.toInstant().toEpochMilli();
+
+        long interval = Duration.ofDays(2).plusHours(14).plusMinutes(20).toMillis();
         long dur = Duration.ofHours(1).toMillis();
-        long diff = now - ref.toInstant().toEpochMilli();
+        long diff = nowMillis - refMillis;
+
         if (diff < 0) return formatDuration(Duration.ofMillis(Math.abs(diff)));
+
         long pos = diff % interval;
-        if (pos < dur) return "§6§lACTIVE §e(" + Duration.ofMillis(dur - pos).toMinutesPart() + "m)";
+        if (pos < dur) {
+            long remaining = dur - pos;
+            return "§6§lACTIVE §e(" + Duration.ofMillis(remaining).toMinutesPart() + "m)";
+        }
         return formatDuration(Duration.ofMillis(interval - pos));
     }
 
@@ -178,8 +189,8 @@ public class BscScreen extends Screen {
     }
 
     private String getBingoTimerString() {
-        ZonedDateTime now = ZonedDateTime.now(BINGO_ZONE);
-        ZonedDateTime start = now.withDayOfMonth(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime now = ZonedDateTime.now(TARGET_ZONE);
+        ZonedDateTime start = now.withDayOfMonth(1).withHour(5).withMinute(0).withSecond(0).withNano(0);
         ZonedDateTime end = start.plusDays(7);
         Duration d;
         String prefix;
@@ -192,7 +203,7 @@ public class BscScreen extends Screen {
             d = Duration.between(now, end);
         } else {
             prefix = "§bNext Bingo: §f";
-            d = Duration.between(now, start.plusMonths(1).withDayOfMonth(1).withHour(6).withMinute(0).withSecond(0).withNano(0));
+            d = Duration.between(now, start.plusMonths(1).withDayOfMonth(1).withHour(5).withMinute(0).withSecond(0).withNano(0));
         }
 
         return prefix + String.format("%dd %dh %dm", d.toDays(), d.toHoursPart(), d.toMinutesPart());
