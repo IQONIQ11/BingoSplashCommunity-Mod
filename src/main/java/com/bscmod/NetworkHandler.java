@@ -39,7 +39,7 @@ public class NetworkHandler extends Thread {
                 if(lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
                     // If the last keepalive was more than 2 minutes ago, we consider the websocket connection as bad and reconnect.
                     System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
-                    webSocketClient.abort();
+                    if(webSocketClient != null) webSocketClient.abort();
                     scheduleReconnect();
                 }
             } catch (InterruptedException e) { break; }
