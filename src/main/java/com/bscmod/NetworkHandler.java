@@ -9,6 +9,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.regex.Matcher;
@@ -19,6 +21,7 @@ public class NetworkHandler extends Thread {
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
+    private Instant lastKeepalive = Instant.now();
 
     public static String activeLobby = "";
     public static long lastPingTime = 0;
@@ -30,7 +33,16 @@ public class NetworkHandler extends Thread {
     public void run() {
         connect();
         while (running) {
-            try { Thread.sleep(1000); } catch (InterruptedException e) { break; }
+            try {
+                Thread.sleep(10000);
+                Instant now = Instant.now();
+                if(lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
+                    // If the last keepalive was more than 2 minutes ago, we consider the websocket connection as bad and reconnect.
+                    System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
+                    webSocketClient.abort();
+                    scheduleReconnect();
+                }
+            } catch (InterruptedException e) { break; }
         }
     }
 
@@ -72,6 +84,7 @@ public class NetworkHandler extends Thread {
             String message = data.toString();
             if (message.equals("KEEPALIVE")) {
                 System.out.println("[BSC] Heartbeat received from server.");
+                lastKeepalive = Instant.now();
             } else {
                 handleMessage(message);
             }
