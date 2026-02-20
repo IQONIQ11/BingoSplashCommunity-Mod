@@ -30,6 +30,6 @@ public class HypixelUtils {
             if (text.contains("Ⓑ")) return "Bingo";
         }
 
-        return "Classic";
+        return "Normal";
     }
 }
