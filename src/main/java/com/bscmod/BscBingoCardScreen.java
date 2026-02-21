@@ -21,7 +21,6 @@ public class BscBingoCardScreen extends Screen {
     }
 
     private boolean isCommunityGoal(int index) {
-        // Defines the diagonal indices as community goals
         return (index == 0 || index == 6 || index == 12 || index == 18 || index == 24);
     }
 
@@ -57,31 +56,25 @@ public class BscBingoCardScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Darken background
         guiGraphics.fill(0, 0, this.width, this.height, 0x90000000);
 
         int slotSize = 54;
         int padding = 4;
         int totalGridSize = (slotSize + padding) * 5;
 
-        // Center the grid on screen
         int startX = (this.width - totalGridSize) / 2;
         int startY = (this.height - totalGridSize) / 2 + 35;
 
-        // Calculate top of the grey box
         int boxTop = startY - 50;
 
-        // Draw Grey Background Box
         guiGraphics.fill(startX - 15, boxTop, startX + totalGridSize + 15, startY + totalGridSize + 15, 0xFF181818);
         drawBorder(guiGraphics, startX - 15, boxTop, totalGridSize + 30, totalGridSize + 65, 0xFF555555);
 
-        // --- DRAW TITLE TEXT ---
         String headerText = playerName + "'s " + month + " Bingo Card";
         int headerWidth = this.font.width(headerText);
         int headerX = (this.width - headerWidth) / 2;
         int headerY = boxTop + 16;
 
-        // CHANGED: 0xFFFFFF -> 0xFFFFFFFF (Added Alpha channel so it is not invisible)
         guiGraphics.drawString(this.font, headerText, headerX, headerY, 0xFFFFFFFF, true);
 
         List<FormattedCharSequence> activeTooltipLines = null;
@@ -101,7 +94,6 @@ public class BscBingoCardScreen extends Screen {
             int bgColor = isCompleted ? 0x8022AA22 : (community ? 0x80AA8822 : 0x80333333);
             int borderColor = isCompleted ? 0xFF55FF55 : (community ? 0xFFFFAA00 : 0xFF555555);
 
-            // Hover effects
             if (mouseX >= x && mouseX <= x + slotSize && mouseY >= y && mouseY <= y + slotSize) {
                 bgColor = isCompleted ? 0xAA22AA22 : (community ? 0xAAAA8822 : 0xAA555555);
                 activeTooltipLines = new ArrayList<>();
@@ -112,15 +104,12 @@ public class BscBingoCardScreen extends Screen {
                 if (community) activeTooltipLines.add(Component.literal("Community Goal").withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC).getVisualOrderText());
             }
 
-            // Draw Slot Box
             guiGraphics.fill(x, y, x + slotSize, y + slotSize, bgColor);
             drawBorder(guiGraphics, x, y, slotSize, slotSize, borderColor);
 
-            // Draw Slot Text
             List<FormattedCharSequence> nameLines = this.font.split(Component.literal(name).withStyle(ChatFormatting.WHITE), slotSize - 6);
             int textY = y + (slotSize / 2) - (nameLines.size() * 4);
             for (FormattedCharSequence line : nameLines) {
-                // CHANGED: 0xFFFFFF -> 0xFFFFFFFF (Ensures slot text is also fully opaque)
                 guiGraphics.drawCenteredString(this.font, line, x + (slotSize / 2), textY, 0xFFFFFFFF);
                 textY += 9;
             }

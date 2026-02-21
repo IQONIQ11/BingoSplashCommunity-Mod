@@ -22,7 +22,7 @@ public class UpdateChecker {
     private static final String CURRENT_VERSION = FabricLoader.getInstance()
             .getModContainer(MOD_ID)
             .map(container -> container.getMetadata().getVersion().getFriendlyString())
-            .orElse("1.0.0");
+            .orElse("1.0.1");
 
     private static int state = 0;
     private static String latestVersionTag = "";
