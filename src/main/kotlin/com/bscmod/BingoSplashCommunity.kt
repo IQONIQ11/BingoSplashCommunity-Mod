@@ -76,9 +76,8 @@ class BingoSplashCommunity : ClientModInitializer {
             }
         })
 
-        val handlerInstance = NetworkHandler()
-        networkHandler = handlerInstance
-        handlerInstance.start()
+        networkHandler = NetworkHandler()
+        networkHandler.start()
     }
 
     companion object {
