@@ -12,6 +12,7 @@ import net.minecraft.sounds.SoundEvents;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
-    private static final String WSS_URL = "ws://localhost:5000/";
+    private static final String WSS_URL = "wss://api.bscmod.com/";
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
@@ -42,6 +43,7 @@ public class NetworkHandler extends Thread {
                 Thread.sleep(10000);
                 Instant now = Instant.now();
                 if (lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
+                    System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
                     if (webSocketClient != null) webSocketClient.abort();
                     scheduleReconnect();
                 }
@@ -58,6 +60,8 @@ public class NetworkHandler extends Thread {
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
         wsFuture.whenComplete((ws, ex) -> {
             if (ex != null) {
+                System.err.println("[BSC] Connection Error: " + ex.getMessage());
+                ex.printStackTrace();
                 scheduleReconnect();
             } else {
                 webSocketClient = ws;
@@ -66,6 +70,7 @@ public class NetworkHandler extends Thread {
     }
 
     private void scheduleReconnect() {
+        System.out.println("[BSC] Attempting to reconnect in 5 seconds...");
         if (!running) return;
         try {
             Thread.sleep(5000);
@@ -84,13 +89,15 @@ public class NetworkHandler extends Thread {
     private class WebSocketListener implements WebSocket.Listener {
         @Override
         public void onOpen(WebSocket webSocket) {
+            System.out.println("[BSC] Connected to the Websocket!");
             webSocket.request(1);
         }
 
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             String message = data.toString();
-            if (message.equalsIgnoreCase("KEEPALIVE")) {
+            if (message.equals("KEEPALIVE")) {
+                System.out.println("[BSC] Heartbeat received from server.");
                 lastKeepalive = Instant.now();
             } else {
                 handleMessage(message);
@@ -100,19 +107,33 @@ public class NetworkHandler extends Thread {
         }
 
         @Override
+        public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
+            return WebSocket.Listener.super.onPing(webSocket, message);
+        }
+
+        @Override
+        public CompletionStage<?> onPong(WebSocket webSocket, ByteBuffer message) {
+            return WebSocket.Listener.super.onPong(webSocket, message);
+        }
+
+        @Override
         public void onError(WebSocket webSocket, Throwable error) {
+            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
             scheduleReconnect();
         }
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            System.out.println("[BSC] Connection closed! Status: " + statusCode + " | Reason: " + reason);
             scheduleReconnect();
             return null;
         }
     }
 
     private void handleMessage(String message) {
-        String[] parts = message.split("\\|");
+        System.out.println("Received message: " + message);
+
+        String[] parts = message.split("\\|", 4);
         if (parts.length < 2) return;
 
         String type = parts[0];
@@ -126,6 +147,7 @@ public class NetworkHandler extends Thread {
                 goalsList.add(parts[i]);
             }
 
+            if (!BscConfig.receivePings) return;
             Minecraft mc = Minecraft.getInstance();
             mc.execute(() -> {
                 if (mc.level != null) {
@@ -182,8 +204,8 @@ public class NetworkHandler extends Thread {
         String detectedLobby = "";
         Matcher matcher = HUB_PATTERN.matcher(actualContent);
         if (matcher.find()) {
+            activeLobby = matcher.group(1);
             detectedLobby = matcher.group(1);
-            activeLobby = detectedLobby;
             lastPingTime = System.currentTimeMillis();
         }
 
@@ -208,22 +230,46 @@ public class NetworkHandler extends Thread {
             client.player.displayClientMessage(mainMsg, false);
 
             if (BscConfig.showTitle) {
-                Component titleText = pingType.equalsIgnoreCase("SPLASH") ?
-                        Component.literal("Splash by " + senderName).setStyle(Style.EMPTY.withColor(BscConfig.titleColor)) :
-                        (actualContent.matches(".*(2x Powder|Gourmand|Raid|Raffle|Together|Wind).*") ?
-                                Component.literal("§d§lEvent Ping") : Component.literal("§6§lItem Found"));
+                Component titleText;
+                if (pingType.equalsIgnoreCase("SPLASH")) {
+                    titleText = Component.literal("Splash by " + senderName)
+                            .setStyle(Style.EMPTY.withColor(BscConfig.titleColor));
+                } else if (actualContent.contains("2x Powder") ||
+                        actualContent.contains("Gourmand") ||
+                        actualContent.contains("Raid") ||
+                        actualContent.contains("Raffle") ||
+                        actualContent.contains("Together") ||
+                        actualContent.contains("Wind")) {
+                    titleText = Component.literal("§d§lEvent Ping");
+                } else {
+                    titleText = Component.literal("§6§lItem Found");
+                }
 
                 int stayTicks = (int) (BscConfig.alertDuration * 20);
                 client.gui.setTitle(titleText);
                 client.gui.setSubtitle(Component.literal("§f" + actualContent));
                 client.gui.setTimes(10, stayTicks, 20);
             }
-            if (BscConfig.playSound) client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+            if (BscConfig.playSound) {
+                client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            }
         });
+    }
+
+    public void disconnect() { closeSocket(); }
+
+    private void closeSocket() {
+        if (webSocketClient != null && (webSocketClient.isInputClosed() || webSocketClient.isOutputClosed())) {
+            webSocketClient.sendClose(1000, "User requested disconnect");
+            webSocketClient = null;
+        }
+        if (client != null) client.close();
     }
 
     public void stopListener() {
         this.running = false;
+        disconnect();
         if (webSocketClient != null) {
             try {
                 webSocketClient.sendClose(1000, "Disconnect");
