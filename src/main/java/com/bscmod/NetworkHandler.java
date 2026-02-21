@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
-    private static final String WSS_URL = "wss://api.bscmod.com/";
+    private static final String WSS_URL = "ws://localhost:5000/";
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
@@ -133,18 +133,18 @@ public class NetworkHandler extends Thread {
     private void handleMessage(String message) {
         System.out.println("Received message: " + message);
 
-        String[] parts = message.split("\\|", 4);
-        if (parts.length < 2) return;
+        String[] allParts = message.split("\\|");
+        if (allParts.length < 2) return;
 
-        String type = parts[0];
+        String type = allParts[0];
 
         if (type.equals("CARD_DATA")) {
-            if (parts.length < 4) return;
-            String player = parts[1];
-            String month = parts[2];
+            if (allParts.length < 4) return;
+            String player = allParts[1];
+            String month = allParts[2];
             List<String> goalsList = new ArrayList<>();
-            for (int i = 3; i < parts.length; i++) {
-                goalsList.add(parts[i]);
+            for (int i = 3; i < allParts.length; i++) {
+                goalsList.add(allParts[i]);
             }
 
             if (!BscConfig.receivePings) return;
@@ -158,7 +158,7 @@ public class NetworkHandler extends Thread {
         }
 
         if (type.equals("ERROR")) {
-            String error = parts[1];
+            String error = allParts[1];
             Minecraft.getInstance().execute(() -> {
                 if (Minecraft.getInstance().player != null) {
                     Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[BSC] " + error), false);
@@ -167,13 +167,13 @@ public class NetworkHandler extends Thread {
             return;
         }
 
-        if (!BscConfig.receivePings) return;
-        if (parts.length < 3) return;
+        String[] chatParts = message.split("\\|", 4);
+        if (!BscConfig.receivePings || chatParts.length < 3) return;
 
-        String senderName = parts[0];
-        String senderDiscordId = parts[1];
-        String pingType = parts[2];
-        String actualContent = (parts.length == 4) ? parts[3] : "";
+        String senderName = chatParts[0];
+        String senderDiscordId = chatParts[1];
+        String pingType = chatParts[2];
+        String actualContent = (chatParts.length == 4) ? chatParts[3] : "";
         String msgLower = actualContent.toLowerCase();
 
         if (pingType.equalsIgnoreCase("SPLASH")) {

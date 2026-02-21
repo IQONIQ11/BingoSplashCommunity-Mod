@@ -100,8 +100,12 @@ public class BscBingoCardScreen extends Screen {
                 activeTooltipLines.add(Component.literal(name).withStyle(community ? ChatFormatting.GOLD : ChatFormatting.YELLOW).getVisualOrderText());
                 activeTooltipLines.addAll(this.font.split(Component.literal(lore).withStyle(ChatFormatting.GRAY), 180));
                 activeTooltipLines.add(Component.literal("").getVisualOrderText());
-                activeTooltipLines.add(Component.literal(isCompleted ? "✔ COMPLETED" : "✖ INCOMPLETE").withStyle(isCompleted ? ChatFormatting.GREEN : ChatFormatting.RED).getVisualOrderText());
-                if (community) activeTooltipLines.add(Component.literal("Community Goal").withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC).getVisualOrderText());
+
+                if (community) {
+                    activeTooltipLines.add(Component.literal("Community Goal").withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC).getVisualOrderText());
+                } else {
+                    activeTooltipLines.add(Component.literal(isCompleted ? "✔ COMPLETED" : "✖ INCOMPLETE").withStyle(isCompleted ? ChatFormatting.GREEN : ChatFormatting.RED).getVisualOrderText());
+                }
             }
 
             guiGraphics.fill(x, y, x + slotSize, y + slotSize, bgColor);
