@@ -8,6 +8,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.ChatFormatting;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -19,23 +20,24 @@ public class UpdateChecker {
 
     private static final String MOD_ID = "bingosplashcommunity";
     private static final String GITHUB_REPO = "IQONIQ11/BingoSplashCommunity-Mod";
+    @Nullable
     private static final String CURRENT_VERSION = FabricLoader.getInstance()
             .getModContainer(MOD_ID)
             .map(container -> container.getMetadata().getVersion().getFriendlyString())
-            .orElse("1.0.1");
+            .orElse(null);
 
-    private static int state = 0;
+    private static UpdateCheckState state = UpdateCheckState.UNCHECKED;
     private static String latestVersionTag = "";
 
     public static void tick() {
-        if (state == 0) {
-            state = 1;
+        if (state == UpdateCheckState.UNCHECKED) {
+            state = UpdateCheckState.CHECKING;
             CompletableFuture.runAsync(UpdateChecker::fetchLatestVersion);
-        } else if (state == 2) {
+        } else if (state == UpdateCheckState.UPDATE_FOUND) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
                 sendUpdateMessage(mc);
-                state = 3;
+                state = UpdateCheckState.NO_UPDATE_FOUND;
             }
         }
     }
@@ -54,21 +56,24 @@ public class UpdateChecker {
                 JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
                 latestVersionTag = json.get("tag_name").getAsString().replace("v", "");
 
-                if (isNewerVersion(CURRENT_VERSION, latestVersionTag)) {
-                    state = 2;
+                if (isNewerVersion(latestVersionTag)) {
+                    state = UpdateCheckState.UPDATE_FOUND;
                 } else {
-                    state = 3;
+                    state = UpdateCheckState.NO_UPDATE_FOUND;
                 }
             } else {
-                state = 3;
+                state = UpdateCheckState.NO_UPDATE_FOUND;
             }
-        } catch (Exception e) {
-            state = 3;
+        } catch (Exception exception) {
+            state = UpdateCheckState.NO_UPDATE_FOUND;
+            exception.printStackTrace();
         }
     }
 
-    private static boolean isNewerVersion(String current, String latest) {
-        String[] currentParts = current.split("\\.");
+    private static boolean isNewerVersion(String latest) {
+        if(CURRENT_VERSION == null) return false;
+
+        String[] currentParts = CURRENT_VERSION.split("\\.");
         String[] latestParts = latest.split("\\.");
         int length = Math.max(currentParts.length, latestParts.length);
 
@@ -97,5 +102,12 @@ public class UpdateChecker {
                 .append(downloadComponent);
 
         mc.player.displayClientMessage(message, false);
+    }
+
+    private enum UpdateCheckState {
+        UNCHECKED,
+        CHECKING,
+        UPDATE_FOUND,
+        NO_UPDATE_FOUND
     }
 }

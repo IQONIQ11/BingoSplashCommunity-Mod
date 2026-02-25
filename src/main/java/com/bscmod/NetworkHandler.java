@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -23,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
-    private static final String WSS_URL = "ws://localhost:5000/";
+    private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
@@ -142,10 +143,7 @@ public class NetworkHandler extends Thread {
             if (allParts.length < 4) return;
             String player = allParts[1];
             String month = allParts[2];
-            List<String> goalsList = new ArrayList<>();
-            for (int i = 3; i < allParts.length; i++) {
-                goalsList.add(allParts[i]);
-            }
+            List<String> goalsList = new ArrayList<>(Arrays.asList(allParts).subList(3, allParts.length));
 
             if (!BscConfig.receivePings) return;
             Minecraft mc = Minecraft.getInstance();
@@ -166,14 +164,12 @@ public class NetworkHandler extends Thread {
             });
             return;
         }
+        if (!BscConfig.receivePings || allParts.length < 3 || allParts.length > 4) return;
 
-        String[] chatParts = message.split("\\|", 4);
-        if (!BscConfig.receivePings || chatParts.length < 3) return;
-
-        String senderName = chatParts[0];
-        String senderDiscordId = chatParts[1];
-        String pingType = chatParts[2];
-        String actualContent = (chatParts.length == 4) ? chatParts[3] : "";
+        String senderName = allParts[0];
+        String senderDiscordId = allParts[1];
+        String pingType = allParts[2];
+        String actualContent = (allParts.length == 4) ? allParts[3] : "";
         String msgLower = actualContent.toLowerCase();
 
         if (pingType.equalsIgnoreCase("SPLASH")) {
@@ -270,11 +266,5 @@ public class NetworkHandler extends Thread {
     public void stopListener() {
         this.running = false;
         disconnect();
-        if (webSocketClient != null) {
-            try {
-                webSocketClient.sendClose(1000, "Disconnect");
-            } catch (Exception e) {}
-        }
-        if (client != null) client.close();
     }
 }

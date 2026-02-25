@@ -1,7 +1,6 @@
 package com.bscmod
 
 import com.mojang.blaze3d.platform.InputConstants
-import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
@@ -16,8 +15,6 @@ import net.minecraft.client.Minecraft
 import net.minecraft.commands.CommandBuildContext
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
-
-var networkHandler: NetworkHandler? = null
 
 class BingoSplashCommunity : ClientModInitializer {
     override fun onInitializeClient() {
@@ -34,29 +31,25 @@ class BingoSplashCommunity : ClientModInitializer {
             )
         )
 
-        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher: CommandDispatcher<FabricClientCommandSource?>?, registryAccess: CommandBuildContext? ->
+        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher: CommandDispatcher<FabricClientCommandSource?>?, _: CommandBuildContext? ->
             dispatcher!!.register(
                 ClientCommandManager.literal("bsc")
-                    .executes(Command { context: CommandContext<FabricClientCommandSource?>? ->
+                    .executes { _: CommandContext<FabricClientCommandSource> ->
                         scrollQueueOpen = true
                         1
-                    })
+                    }
             )
 
             dispatcher.register(
                 ClientCommandManager.literal("bingocard")
                     .then(
                         ClientCommandManager.argument("player", StringArgumentType.word())
-                            .executes(Command { context: CommandContext<FabricClientCommandSource?>? ->
+                            .executes { context: CommandContext<FabricClientCommandSource> ->
                                 val target = StringArgumentType.getString(context, "player")
-                                networkHandler?.let {
-                                    it.sendMessage("REQUEST_CARD|$target")
-                                    context!!.source!!.sendFeedback(Component.literal("§e[BSC] Fetching bingo card for $target..."))
-                                } ?: run {
-                                    context!!.source!!.sendFeedback(Component.literal("§c[BSC] Not connected to server."))
-                                }
+                                networkHandler.sendMessage("REQUEST_CARD|$target")
+                                context.source.sendFeedback(Component.literal("§e[BSC] Fetching bingo card for $target..."))
                                 1
-                            })
+                            }
                     )
             )
         })
@@ -81,6 +74,7 @@ class BingoSplashCommunity : ClientModInitializer {
     }
 
     companion object {
+        lateinit var networkHandler: NetworkHandler
         var settingsKey: KeyMapping? = null
         var scrollQueueOpen: Boolean = false
 
@@ -93,7 +87,7 @@ class BingoSplashCommunity : ClientModInitializer {
         }
 
         @JvmStatic
-        fun getSettingsKeyName(): String? {
+        fun getSettingsKeyName(): String {
             if (settingsKey == null || settingsKey!!.isUnbound) return "NONE"
             return settingsKey!!.saveString().uppercase()
                 .replace("KEY.KEYBOARD.", "")

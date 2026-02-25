@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag.Default;
 
 import java.net.URL;
 import java.time.Duration;
@@ -84,13 +85,13 @@ public class BscBingoHud {
             List<Component> tooltip = stack.getTooltipLines(
                     net.minecraft.world.item.Item.TooltipContext.of(client.level),
                     client.player,
-                    net.minecraft.world.item.TooltipFlag.Default.NORMAL
+                    Default.NORMAL
             );
 
             boolean isCompleted = false;
             for (Component line : tooltip) {
                 String lineText = ChatFormatting.stripFormatting(line.getString());
-                if (lineText != null && (lineText.contains("GOAL REACHED") || lineText.contains("GOAL COMPLETE"))) {
+                if (!lineText.isBlank() && (lineText.contains("GOAL REACHED") || lineText.contains("GOAL COMPLETE"))) {
                     isCompleted = true;
                     break;
                 }
@@ -98,7 +99,7 @@ public class BscBingoHud {
 
             if (isCompleted) {
                 String itemName = ChatFormatting.stripFormatting(stack.getHoverName().getString());
-                if (itemName == null) continue;
+                if (!itemName.isBlank()) continue;
 
                 synchronized (goals) {
                     for (BingoGoal goal : goals) {
