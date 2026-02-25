@@ -145,7 +145,6 @@ public class NetworkHandler extends Thread {
             String month = allParts[2];
             List<String> goalsList = new ArrayList<>(Arrays.asList(allParts).subList(3, allParts.length));
 
-            if (!BscConfig.receivePings) return;
             Minecraft mc = Minecraft.getInstance();
             mc.execute(() -> {
                 if (mc.level != null) {

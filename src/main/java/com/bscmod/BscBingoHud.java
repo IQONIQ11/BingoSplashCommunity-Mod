@@ -61,9 +61,7 @@ public class BscBingoHud {
             }
 
             if (BscConfig.displayBingoTimer) {
-                if (!BscConfig.bingoCardBingoProfileOnly || isBingoProfile) {
-                    renderTimer(context, client.font);
-                }
+                renderTimer(context, client.font);
             }
         });
     }
