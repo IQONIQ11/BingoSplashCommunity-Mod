@@ -31,7 +31,7 @@ public class NetworkHandler extends Thread {
 
     private static final Pattern HUB_PATTERN = Pattern.compile("hub\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
-    public static final ResourceLocation SPLASH_SOUND_ID = ResourceLocation.parse("bingosplashcommunity:splash_custom");
+    public static final ResourceLocation SPLASH_SOUND_ID = ResourceLocation.parse("bingosplashcommunity:frittomisto");
     public static final SoundEvent SPLASH_SOUND_EVENT = SoundEvent.createVariableRangeEvent(SPLASH_SOUND_ID);
 
     @Override
@@ -121,7 +121,7 @@ public class NetworkHandler extends Thread {
         }
     }
 
-    public static void handleMessage(String message) {
+    private void handleMessage(String message) {
         System.out.println("Received message: " + message);
 
         if (!BscConfig.receivePings) return;
@@ -199,10 +199,9 @@ public class NetworkHandler extends Thread {
 
             if (pingType.equalsIgnoreCase("SPLASH")) {
                 if (BscConfig.playSound && BscConfig.frittomisto) {
-                    // Riproduce il tuo suono custom
+                    // Custom sound
                     client.player.playSound(SPLASH_SOUND_EVENT, 1.0f, 1.0f);
                 } else if (BscConfig.playSound) {
-                    // Riproduce il suono standard per gli altri ping
                     client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 }
             }
@@ -222,9 +221,5 @@ public class NetworkHandler extends Thread {
     public void stopListener() {
         this.running = false;
         disconnect();
-    }
-
-    public static void test() {
-        handleMessage("TestUser|123456789|SPLASH|Hub 42 - Alchemy Splash at spawn!");
     }
 }
