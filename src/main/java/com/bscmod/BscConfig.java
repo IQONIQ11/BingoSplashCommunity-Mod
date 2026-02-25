@@ -18,24 +18,25 @@ public class BscConfig {
 
     public static boolean receivePings = true;
     public static boolean showTitle = true;
+    public static long alertDuration = 4;
     public static int titleColor = 0xFF00FFFF;
     public static boolean displayBingoCard = false;
     public static boolean playSound = true;
     public static boolean ironmanOnly = false;
     public static boolean bingoOnly = false;
+    public static boolean showHubWarp = false;
 
-    // HUD Settings: Bingo Card
+    public static boolean bingoCardBingoProfileOnly = false;
+
     public static int bingoHudX = 10;
     public static int bingoHudY = 60;
     public static float bingoHudScale = 1.0f;
     public static int cardTitleColor = 0xFF00FFFF;
     public static int cardTextColor = 0xFFFFFFFF;
 
-    // Persistent Bingo Progress
     public static List<String> completedGoals = new ArrayList<>();
     public static String lastBingoSession = "";
 
-    // HUD Settings: Bingo Timer
     public static boolean displayBingoTimer = false;
     public static int timerHudX = 10;
     public static int timerHudY = 150;
@@ -43,7 +44,6 @@ public class BscConfig {
     public static int timerTitleColor = 0xFF00FFFF;
     public static int timerTextColor = 0xFFFFFFFF;
 
-    // Mining & Event Toggles
     public static boolean syncHeart = false, robotron = false, controlSwitch = false, motor = false, transmitter = false, ftx3070 = false;
     public static boolean armadillo = false, jungleKey = false, picko = false, powder = false, goblinEgg = false, flawlessGem = false;
     public static boolean powder2x = false, goblinRaid = false, raffle = false, betterTogether = false, goneWind = false, mithrilGourmand = false;
@@ -56,11 +56,14 @@ public class BscConfig {
             ConfigData data = new ConfigData();
             data.receivePings = receivePings;
             data.showTitle = showTitle;
+            data.alertDuration = alertDuration;
             data.titleColor = titleColor;
             data.displayBingoCard = displayBingoCard;
             data.playSound = playSound;
             data.ironmanOnly = ironmanOnly;
             data.bingoOnly = bingoOnly;
+            data.showHubWarp = showHubWarp;
+            data.bingoCardBingoProfileOnly = bingoCardBingoProfileOnly;
             data.completedGoals = completedGoals;
             data.lastBingoSession = lastBingoSession;
             data.bingoHudX = bingoHudX;
@@ -109,11 +112,14 @@ public class BscConfig {
             if (data != null) {
                 receivePings = data.receivePings;
                 showTitle = data.showTitle;
+                alertDuration = data.alertDuration;
                 titleColor = data.titleColor;
                 displayBingoCard = data.displayBingoCard;
                 playSound = data.playSound;
                 ironmanOnly = data.ironmanOnly;
                 bingoOnly = data.bingoOnly;
+                showHubWarp = data.showHubWarp;
+                bingoCardBingoProfileOnly = data.bingoCardBingoProfileOnly;
                 completedGoals = data.completedGoals != null ? data.completedGoals : new ArrayList<>();
                 lastBingoSession = data.lastBingoSession != null ? data.lastBingoSession : "";
                 bingoHudX = data.bingoHudX;
@@ -152,7 +158,9 @@ public class BscConfig {
     }
 
     private static class ConfigData {
-        boolean receivePings = true, showTitle = true, displayBingoCard = false, playSound = true, ironmanOnly = false, bingoOnly = false;
+        boolean receivePings = true, showTitle = true, displayBingoCard = false, playSound = true, ironmanOnly = false, bingoOnly = false, showHubWarp = false;
+        boolean bingoCardBingoProfileOnly = false;
+        long alertDuration = 4;
         int titleColor = 0xFF00FFFF;
         List<String> completedGoals = new ArrayList<>();
         String lastBingoSession = "";
