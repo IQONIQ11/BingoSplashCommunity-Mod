@@ -10,17 +10,24 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.commands.CommandBuildContext
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.commands.Commands.CommandSelection
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
+
 
 class BingoSplashCommunity : ClientModInitializer {
 	override fun onInitializeClient() {
 		BscConfig.load()
 		BscBingoHud.register()
 		BingoRolesRenderer.fetchLatestRoles()
+        Registry.register(BuiltInRegistries.SOUND_EVENT, NetworkHandler.SPLASH_SOUND_ID, NetworkHandler.SPLASH_SOUND_EVENT)
 
 		// 1. Keybind Registration
 		settingsKey = KeyBindingHelper.registerKeyBinding(
@@ -41,8 +48,23 @@ class BingoSplashCommunity : ClientModInitializer {
 						1
 					})
 			)
-		})
 
+            // NUOVO: Comando di test /bsctest
+            dispatcher.register(
+                ClientCommandManager.literal("bsctest")
+                    .executes { context ->
+                        // Simuliamo il formato del server: "Nome|DiscordID|Tipo|Messaggio"
+                        val testMessage = "TestUser|123456789|SPLASH|Hub 42 - Alchemy Splash at spawn!"
+
+                        // Chiamiamo il metodo del NetworkHandler
+                        NetworkHandler.handleMessage(testMessage)
+
+                        // Invia un feedback nel log/chat di chi esegue il comando
+                        context.source.sendFeedback(net.minecraft.network.chat.Component.literal("§a[BSC] Test splash inviato!"))
+                        1
+                    }
+            )
+		})
 
 		// 4. Tick Handling
 		ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client: Minecraft? ->
