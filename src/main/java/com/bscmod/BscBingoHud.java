@@ -1,5 +1,6 @@
 package com.bscmod;
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.ChatFormatting;
@@ -7,6 +8,11 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag.Default;
 
 import java.net.URL;
 import java.time.Duration;
@@ -22,6 +28,7 @@ public class BscBingoHud {
     private static boolean isLoading = false;
     private static final String GOAL_URL = "https://raw.githubusercontent.com/IQONIQ11/bingo-goals/main/goals.txt";
     private static final ZoneId TARGET_ZONE = ZoneOffset.ofHours(1);
+    private static int tickCounter = 0;
 
     private record BingoGoal(String name, String description) {}
 
@@ -33,14 +40,78 @@ public class BscBingoHud {
             onChatMessage(text);
         });
 
-        HudRenderCallback.EVENT.register((context, tickCounter) -> {
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (tickCounter++ % 20 == 0) {
+                scanBingoCard(client);
+            }
+        });
+
+        HudRenderCallback.EVENT.register((context, delta) -> {
             Minecraft client = Minecraft.getInstance();
             if (client.player == null || client.options.hideGui) return;
             if (client.screen instanceof BscScreen || client.screen instanceof BscHudEditScreen) return;
 
-            if (BscConfig.displayBingoCard) renderCard(context, client.font);
-            if (BscConfig.displayBingoTimer) renderTimer(context, client.font);
+            String currentProfile = HypixelUtils.getProfileType();
+            boolean isBingoProfile = currentProfile.equalsIgnoreCase("Bingo");
+
+            if (BscConfig.displayBingoCard) {
+                if (!BscConfig.bingoCardBingoProfileOnly || isBingoProfile) {
+                    renderCard(context, client.font);
+                }
+            }
+
+            if (BscConfig.displayBingoTimer) {
+                renderTimer(context, client.font);
+            }
         });
+    }
+
+    private static void scanBingoCard(Minecraft client) {
+        if (client.player == null || client.player.containerMenu == null) return;
+
+        if (!(client.player.containerMenu instanceof ChestMenu chestMenu)) return;
+
+        String title = client.screen != null ? client.screen.getTitle().getString() : "";
+        if (!title.contains("Bingo Card")) return;
+
+        List<BingoGoal> toRemove = new ArrayList<>();
+
+        for (Slot slot : chestMenu.slots) {
+            if (!slot.hasItem()) continue;
+
+            ItemStack stack = slot.getItem();
+            List<Component> tooltip = stack.getTooltipLines(
+                    net.minecraft.world.item.Item.TooltipContext.of(client.level),
+                    client.player,
+                    Default.NORMAL
+            );
+
+            boolean isCompleted = false;
+            for (Component line : tooltip) {
+                String lineText = ChatFormatting.stripFormatting(line.getString());
+                if (!lineText.isBlank() && (lineText.contains("GOAL REACHED") || lineText.contains("GOAL COMPLETE"))) {
+                    isCompleted = true;
+                    break;
+                }
+            }
+
+            if (isCompleted) {
+                String itemName = ChatFormatting.stripFormatting(stack.getHoverName().getString());
+                if (!itemName.isBlank()) continue;
+
+                synchronized (goals) {
+                    for (BingoGoal goal : goals) {
+                        if (itemName.toLowerCase().contains(goal.name().toLowerCase().trim())) {
+                            toRemove.add(goal);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (BingoGoal goal : toRemove) {
+            removeGoal(goal);
+        }
     }
 
     private static String getSessionKey() {
