@@ -29,6 +29,7 @@ public class BscScreen extends Screen {
     private int currentTab = 0;
     private float scrollAmount = 0;
     private boolean isDraggingScrollbar = false;
+    private boolean isDraggingSlider = false;
     private boolean waitingForKey = false;
 
     private final int[] PRESET_COLORS = {0xFF00FFFF, 0xFFFF5555, 0xFF55FF55, 0xFFFFFF55, 0xFFFF55FF, 0xFFFFAA00, 0xFFFFFFFF};
@@ -111,6 +112,14 @@ public class BscScreen extends Screen {
                     Component.literal("§b§lBSC Mod").getVisualOrderText(),
                     Component.literal("§7Logo made by May").getVisualOrderText()
             ), mouseX, mouseY);
+        }
+
+        if (isDraggingSlider && currentTab == 1) {
+            int tx = (int) (((windowWidth - 190) / CONTENT_SCALE) - 22);
+            float sliderWidth = 50f;
+            float percent = (float) ((relMouseX - tx) / sliderWidth);
+            percent = Math.max(0, Math.min(1, percent));
+            BscConfig.alertDuration = 1 + Math.round(percent * 9);
         }
     }
 
@@ -226,6 +235,8 @@ public class BscScreen extends Screen {
             currY += 20;
             drawSetting(context, "Display Bingo Card", "HUD displaying remaining Bingo goals.", currY, BscConfig.displayBingoCard, relMouseX, relMouseY);
             currY += SPACING;
+            drawSetting(context, "Bingo Profile Only", "Only show card on Bingo profile.", currY, BscConfig.bingoCardBingoProfileOnly, relMouseX, relMouseY);
+            currY += SPACING;
             drawColorSetting(context, "Card Title", BscConfig.cardTitleColor, currY, relMouseX, relMouseY);
             currY += SPACING;
             drawColorSetting(context, "Card Text", BscConfig.cardTextColor, currY, relMouseX, relMouseY);
@@ -243,10 +254,12 @@ public class BscScreen extends Screen {
             context.drawCenteredString(this.font, "Reset Defaults", 40, currY + 3, 0xFFFFFFFF);
         } else if (currentTab == 1) {
             drawSetting(context, "Show Screen Alerts", "Display a large title in the center of your screen.", 10, BscConfig.showTitle, relMouseX, relMouseY);
-            drawColorSetting(context, "Alert Color", BscConfig.titleColor, 40, relMouseX, relMouseY);
-            drawSetting(context, "Play Sound", "Play a notification sound when a splash is detected.", 80, BscConfig.playSound, relMouseX, relMouseY);
-            drawSetting(context, "Ironman Only", "Only show splash notifications while on an Ironman profile.", 115, BscConfig.ironmanOnly, relMouseX, relMouseY);
-            drawSetting(context, "Bingo Only", "Only show splash notifications while on a Bingo profile.", 150, BscConfig.bingoOnly, relMouseX, relMouseY);
+            drawSliderSetting(context, "Alert Duration", BscConfig.alertDuration, 40, relMouseX, relMouseY);
+            drawColorSetting(context, "Alert Color", BscConfig.titleColor, 75, relMouseX, relMouseY);
+            drawSetting(context, "Play Sound", "Play a notification sound when a splash is detected.", 110, BscConfig.playSound, relMouseX, relMouseY);
+            drawSetting(context, "Ironman Only", "Only show splash notifications while on an Ironman profile.", 145, BscConfig.ironmanOnly, relMouseX, relMouseY);
+            drawSetting(context, "Bingo Only", "Only show splash notifications while on a Bingo profile.", 180, BscConfig.bingoOnly, relMouseX, relMouseY);
+            drawSetting(context, "Hub Warp Button", "Adds a [WARP] button to splash notifications.", 215, BscConfig.showHubWarp, relMouseX, relMouseY);
         } else if (currentTab == 4) {
             String lastCat = "";
             for (BingoRolesRenderer.RoleData role : BingoRolesRenderer.ROLES) {
@@ -282,6 +295,18 @@ public class BscScreen extends Screen {
         context.fill(tx, yPos + 2, tx + 28, yPos + 14, enabled ? 0xFF3574F0 : 0xFF444444);
         int kX = enabled ? tx + 16 : tx + 2;
         context.fill(kX, yPos + 4, kX + 10, yPos + 12, 0xFFFFFFFF);
+    }
+
+    private void drawSliderSetting(GuiGraphics context, String label, long value, int yPos, double relX, double relY) {
+        int tx = (int) (((windowWidth - 190) / CONTENT_SCALE) - 22);
+        if (isHovering(relX, relY, 0, yPos - 2, tx + 55, 20)) context.fill(-2, yPos - 2, tx + 55, yPos + 22, 0x22FFFFFF);
+        context.drawString(this.font, label, 0, yPos, 0xFFFFFFFF, true);
+        context.drawString(this.font, "§8Duration: §e" + value + "s", 0, yPos + 10, 0xFF888888, true);
+        int sliderWidth = 50;
+        context.fill(tx, yPos + 6, tx + sliderWidth, yPos + 10, 0xFF444444);
+        float progress = (value - 1) / 9f;
+        int knobX = tx + (int) (progress * sliderWidth);
+        context.fill(knobX - 2, yPos + 4, knobX + 2, yPos + 12, 0xFF3574F0);
     }
 
     private void drawActionSetting(GuiGraphics context, int yPos, double relMouseX, double relMouseY) {
@@ -346,7 +371,8 @@ public class BscScreen extends Screen {
 
     private float getMaxScroll() {
         return switch (currentTab) {
-            case 0 -> 240;
+            case 0 -> 280;
+            case 1 -> 50;
             case 2 -> 250;
             case 4 -> (BingoRolesRenderer.ROLES.size() * 40);
             default -> 0;
@@ -363,8 +389,11 @@ public class BscScreen extends Screen {
     private void resetAllToDefaults() {
         BscConfig.receivePings = true; BscConfig.frittomisto = false; BscConfig.showTitle = true; BscConfig.playSound = true; BscConfig.titleColor = 0xFF00FFFF;
         BscConfig.displayBingoCard = false; BscConfig.displayBingoTimer = false;
+        BscConfig.bingoCardBingoProfileOnly = false;
         BscConfig.cardTitleColor = 0xFF00FFFF; BscConfig.cardTextColor = 0xFFFFFFFF;
         BscConfig.timerTitleColor = 0xFF00FFFF; BscConfig.timerTextColor = 0xFFFFFFFF;
+        BscConfig.alertDuration = 1;
+        BscConfig.showHubWarp = true;
         BingoSplashCommunity.resetKeybind(); BscConfig.save();
     }
 
@@ -375,7 +404,17 @@ public class BscScreen extends Screen {
     }
 
     private boolean isHovering(double mx, double my, double x, double y, double w, double h) { return mx >= x && mx <= x + w && my >= y && my <= y + h; }
-    @Override public boolean mouseReleased(MouseButtonEvent event) { this.isDraggingScrollbar = false; return super.mouseReleased(event); }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        this.isDraggingScrollbar = false;
+        if (this.isDraggingSlider) {
+            this.isDraggingSlider = false;
+            BscConfig.save();
+        }
+        return super.mouseReleased(event);
+    }
+
     @Override public boolean mouseScrolled(double mx, double my, double h, double v) { scrollAmount = Math.max(0, Math.min(getMaxScroll(), scrollAmount - (float) (v * 20))); return true; }
 
     @Override public boolean keyPressed(KeyEvent keyEvent) {
@@ -416,6 +455,8 @@ public class BscScreen extends Screen {
             cY += (SPACING + 30);
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.displayBingoCard = !BscConfig.displayBingoCard; BscConfig.save(); return true; }
             cY += SPACING;
+            if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.bingoCardBingoProfileOnly = !BscConfig.bingoCardBingoProfileOnly; BscConfig.save(); return true; }
+            cY += SPACING;
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.cardTitleColor = getNextColor(BscConfig.cardTitleColor); BscConfig.save(); return true; }
             cY += SPACING;
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.cardTextColor = getNextColor(BscConfig.cardTextColor); BscConfig.save(); return true; }
@@ -428,11 +469,14 @@ public class BscScreen extends Screen {
             cY += (SPACING + 20);
             if (isHovering(relX, relY, 0, cY, 80, 15)) { resetAllToDefaults(); return true; }
         } else if (currentTab == 1) {
-            if (isHovering(relX, relY, tx, 10, 28, 12)) { BscConfig.showTitle = !BscConfig.showTitle; BscConfig.save(); return true; }
-            if (isHovering(relX, relY, tx, 40, 28, 12)) { BscConfig.titleColor = getNextColor(BscConfig.titleColor); BscConfig.save(); return true; }
-            if (isHovering(relX, relY, tx, 80, 28, 12)) { BscConfig.playSound = !BscConfig.playSound; BscConfig.save(); return true; }
-            if (isHovering(relX, relY, tx, 115, 28, 12)) { BscConfig.ironmanOnly = !BscConfig.ironmanOnly; BscConfig.save(); return true; }
-            if (isHovering(relX, relY, tx, 150, 28, 12)) { BscConfig.bingoOnly = !BscConfig.bingoOnly; BscConfig.save(); return true; }
+            int cY = -(int) scrollAmount;
+            if (isHovering(relX, relY, tx, cY + 10, 28, 12)) { BscConfig.showTitle = !BscConfig.showTitle; BscConfig.save(); return true; }
+            if (isHovering(relX, relY, tx - 22, cY + 40, 50, 20)) { this.isDraggingSlider = true; return true; }
+            if (isHovering(relX, relY, tx, cY + 75, 28, 12)) { BscConfig.titleColor = getNextColor(BscConfig.titleColor); BscConfig.save(); return true; }
+            if (isHovering(relX, relY, tx, cY + 110, 28, 12)) { BscConfig.playSound = !BscConfig.playSound; BscConfig.save(); return true; }
+            if (isHovering(relX, relY, tx, cY + 145, 28, 12)) { BscConfig.ironmanOnly = !BscConfig.ironmanOnly; BscConfig.save(); return true; }
+            if (isHovering(relX, relY, tx, cY + 180, 28, 12)) { BscConfig.bingoOnly = !BscConfig.bingoOnly; BscConfig.save(); return true; }
+            if (isHovering(relX, relY, tx, cY + 215, 28, 12)) { BscConfig.showHubWarp = !BscConfig.showHubWarp; BscConfig.save(); return true; }
         } else {
             int sY = -(int) scrollAmount;
             for (int i = 0; i < (currentTab == 2 ? 12 : 6); i++) {

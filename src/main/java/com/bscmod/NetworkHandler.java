@@ -1,7 +1,11 @@
 package com.bscmod;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -13,13 +17,16 @@ import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
-    private static final String WSS_URL = "wss://api.bscmod.com/";
+    private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
@@ -41,13 +48,14 @@ public class NetworkHandler extends Thread {
             try {
                 Thread.sleep(10000);
                 Instant now = Instant.now();
-                if(lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
-                    // If the last keepalive was more than 2 minutes ago, we consider the websocket connection as bad and reconnect.
+                if (lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
                     System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
-                    if(webSocketClient != null) webSocketClient.abort();
+                    if (webSocketClient != null) webSocketClient.abort();
                     scheduleReconnect();
                 }
-            } catch (InterruptedException e) { break; }
+            } catch (InterruptedException e) {
+                break;
+            }
         }
     }
 
@@ -69,11 +77,18 @@ public class NetworkHandler extends Thread {
 
     private void scheduleReconnect() {
         System.out.println("[BSC] Attempting to reconnect in 5 seconds...");
+        if (!running) return;
         try {
             Thread.sleep(5000);
             connect();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String msg) {
+        if (webSocketClient != null) {
+            webSocketClient.sendText(msg, true);
         }
     }
 
@@ -108,38 +123,63 @@ public class NetworkHandler extends Thread {
         }
 
         @Override
+        public void onError(WebSocket webSocket, Throwable error) {
+            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
+            scheduleReconnect();
+        }
+
+        @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
             System.out.println("[BSC] Connection closed! Status: " + statusCode + " | Reason: " + reason);
             scheduleReconnect();
             return null;
-        }
-
-        @Override
-        public void onError(WebSocket webSocket, Throwable error) {
-            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
-            scheduleReconnect();
         }
     }
 
     private void handleMessage(String message) {
         System.out.println("Received message: " + message);
 
-        if (!BscConfig.receivePings) return;
+        String[] allParts = message.split("\\|");
+        if (allParts.length < 2) return;
 
-        String[] parts = message.split("\\|", 4);
-        if (parts.length < 3) return;
+        String type = allParts[0];
 
-        String senderName = parts[0];
-        String senderDiscordId = parts[1];
-        String pingType = parts[2];
-        String actualContent = (parts.length == 4) ? parts[3] : "";
+        if (type.equals("CARD_DATA")) {
+            if (allParts.length < 4) return;
+            String player = allParts[1];
+            String month = allParts[2];
+            List<String> goalsList = new ArrayList<>(Arrays.asList(allParts).subList(3, allParts.length));
 
+            Minecraft mc = Minecraft.getInstance();
+            mc.execute(() -> {
+                if (mc.level != null) {
+                    mc.setScreen(new BscBingoCardScreen(player, month, goalsList));
+                }
+            });
+            return;
+        }
+
+        if (type.equals("ERROR")) {
+            String error = allParts[1];
+            Minecraft.getInstance().execute(() -> {
+                if (Minecraft.getInstance().player != null) {
+                    Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[BSC] " + error), false);
+                }
+            });
+            return;
+        }
+        if (!BscConfig.receivePings || allParts.length < 3 || allParts.length > 4) return;
+
+        String senderName = allParts[0];
+        String senderDiscordId = allParts[1];
+        String pingType = allParts[2];
+        String actualContent = (allParts.length == 4) ? allParts[3] : "";
         String msgLower = actualContent.toLowerCase();
 
         if (pingType.equalsIgnoreCase("SPLASH")) {
             String detectedProfile = HypixelUtils.getProfileType();
-            if (BscConfig.ironmanOnly && !detectedProfile.equalsIgnoreCase("Ironman")) return;
-            if (BscConfig.bingoOnly && !detectedProfile.equalsIgnoreCase("Bingo")) return;
+            if (BscConfig.ironmanOnly && !"Ironman".equalsIgnoreCase(detectedProfile)) return;
+            if (BscConfig.bingoOnly && !"Bingo".equalsIgnoreCase(detectedProfile)) return;
         } else {
             if (msgLower.contains("synthetic heart") && !BscConfig.syncHeart) return;
             if (msgLower.contains("robotron reflector") && !BscConfig.robotron) return;
@@ -153,7 +193,6 @@ public class NetworkHandler extends Thread {
             if (msgLower.contains("powder") && !msgLower.contains("2x") && !BscConfig.powder) return;
             if (msgLower.contains("goblin egg") && !BscConfig.goblinEgg) return;
             if (msgLower.contains("flawless gemstone") && !BscConfig.flawlessGem) return;
-
             if (msgLower.contains("2x powder") && !BscConfig.powder2x) return;
             if (msgLower.contains("goblin raid") && !BscConfig.goblinRaid) return;
             if (msgLower.contains("raffle") && !BscConfig.raffle) return;
@@ -162,19 +201,33 @@ public class NetworkHandler extends Thread {
             if (msgLower.contains("mithril gourmand") && !BscConfig.mithrilGourmand) return;
         }
 
+        String detectedLobby = "";
         Matcher matcher = HUB_PATTERN.matcher(actualContent);
         if (matcher.find()) {
             activeLobby = matcher.group(1);
+            detectedLobby = matcher.group(1);
             lastPingTime = System.currentTimeMillis();
         }
 
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
+        final String finalLobby = detectedLobby;
         client.execute(() -> {
             currentSplashDiscordId = senderDiscordId;
-            String formatted = "§b§l[BSC] §e" + senderName + ": §f" + actualContent;
-            client.player.displayClientMessage(Component.literal(formatted), false);
+
+            MutableComponent mainMsg = Component.literal("§b§l[BSC] §e" + senderName + ": §f" + actualContent);
+
+            if (pingType.equalsIgnoreCase("SPLASH") && BscConfig.showHubWarp && !finalLobby.isEmpty()) {
+                mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
+                        style.withClickEvent(new ClickEvent.RunCommand("/hub"))
+                                .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to warp to Hub")))
+                                .withColor(ChatFormatting.GOLD)
+                                .withBold(true)
+                ));
+            }
+
+            client.player.displayClientMessage(mainMsg, false);
 
             if (BscConfig.showTitle) {
                 Component titleText;
@@ -192,9 +245,10 @@ public class NetworkHandler extends Thread {
                     titleText = Component.literal("§6§lItem Found");
                 }
 
+                int stayTicks = (int) (BscConfig.alertDuration * 20);
                 client.gui.setTitle(titleText);
                 client.gui.setSubtitle(Component.literal("§f" + actualContent));
-                client.gui.setTimes(10, 70, 20);
+                client.gui.setTimes(10, stayTicks, 20);
             }
 
             if (pingType.equalsIgnoreCase("SPLASH")) {
