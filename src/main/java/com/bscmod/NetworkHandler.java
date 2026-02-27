@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
     private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
+    private static final int MAX_HEARTBEAT_LOGS = 25;
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
@@ -33,6 +34,7 @@ public class NetworkHandler extends Thread {
     public static String activeLobby = "";
     public static long lastPingTime = 0;
     public static volatile String currentSplashDiscordId = "";
+    private int receivedHeartbeats = 0;
 
     private static final Pattern HUB_PATTERN = Pattern.compile("hub\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
@@ -98,7 +100,10 @@ public class NetworkHandler extends Thread {
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             String message = data.toString();
             if (message.equals("KEEPALIVE")) {
-                System.out.println("[BSC] Heartbeat received from server.");
+                if(receivedHeartbeats++ >= MAX_HEARTBEAT_LOGS) {
+                    System.out.println("[BSC] " + MAX_HEARTBEAT_LOGS + " Heartbeats received from server.");
+                    receivedHeartbeats = 0;
+                }
                 lastKeepalive = Instant.now();
             } else {
                 handleMessage(message);
