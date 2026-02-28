@@ -22,12 +22,15 @@ public class HypixelUtils {
 
         Collection<PlayerTeam> teams = scoreboard.getPlayerTeams();
         for (PlayerTeam team : teams) {
-            String rawLine = team.getPlayerPrefix().getString() + team.getPlayerSuffix().getString();
+            if(team.getPlayers().size() != 1) continue;
 
-            String text = ChatFormatting.stripFormatting(rawLine);
+            String playerName = client.player.getGameProfile().name();
+            if(!team.getPlayers().iterator().next().equals(playerName)) continue;
 
-            if (text.contains("♲")) return "Ironman";
-            if (text.contains("Ⓑ")) return "Bingo";
+            String suffix = ChatFormatting.stripFormatting(team.getPlayerSuffix().getString());
+
+            if (suffix.contains("♲")) return "Ironman";
+            if (suffix.contains("Ⓑ")) return "Bingo";
         }
 
         return "Normal";
