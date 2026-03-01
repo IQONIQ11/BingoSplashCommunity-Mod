@@ -13,14 +13,17 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.commands.CommandBuildContext
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
 class BingoSplashCommunity : ClientModInitializer {
-    override fun onInitializeClient() {
-        BscConfig.load()
-        BscBingoHud.register()
-        BingoRolesRenderer.fetchLatestRoles()
+	override fun onInitializeClient() {
+		BscConfig.load()
+		BscBingoHud.register()
+		BingoRolesRenderer.fetchLatestRoles()
+        Registry.register(BuiltInRegistries.SOUND_EVENT, NetworkHandler.SPLASH_SOUND_ID, NetworkHandler.SPLASH_SOUND_EVENT)
 
         settingsKey = KeyBindingHelper.registerKeyBinding(
             KeyMapping(

@@ -1,6 +1,5 @@
 package com.bscmod;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -229,6 +228,8 @@ public class BscScreen extends Screen {
             drawActionSetting(context, currY, relMouseX, relMouseY);
             currY += SPACING;
             drawKeybindSetting(context, waitingForKey ? "§e???" : "§b" + BingoSplashCommunity.getSettingsKeyName(), currY, relMouseX, relMouseY);
+            currY += SPACING;
+            drawSetting(context, "Italian Meme Mode", "Fritto Misto song.", currY, BscConfig.frittomisto, relMouseX, relMouseY);
             currY += (SPACING + 10);
             drawSubHeader(context, "Bingo Card", currY);
             currY += 20;
@@ -386,7 +387,7 @@ public class BscScreen extends Screen {
     private void toggleEvent(int i) { switch (i) { case 0 -> BscConfig.powder2x = !BscConfig.powder2x; case 1 -> BscConfig.goblinRaid = !BscConfig.goblinRaid; case 2 -> BscConfig.raffle = !BscConfig.raffle; case 3 -> BscConfig.betterTogether = !BscConfig.betterTogether; case 4 -> BscConfig.goneWind = !BscConfig.goneWind; case 5 -> BscConfig.mithrilGourmand = !BscConfig.mithrilGourmand; } }
 
     private void resetAllToDefaults() {
-        BscConfig.receivePings = true; BscConfig.showTitle = true; BscConfig.playSound = true; BscConfig.titleColor = 0xFF00FFFF;
+        BscConfig.receivePings = true; BscConfig.frittomisto = false; BscConfig.showTitle = true; BscConfig.playSound = true; BscConfig.titleColor = 0xFF00FFFF;
         BscConfig.displayBingoCard = false; BscConfig.displayBingoTimer = false;
         BscConfig.bingoCardBingoProfileOnly = false;
         BscConfig.cardTitleColor = 0xFF00FFFF; BscConfig.cardTextColor = 0xFFFFFFFF;
@@ -449,6 +450,8 @@ public class BscScreen extends Screen {
             if (isHovering(relX, relY, tx - 10, cY, 38, 12)) { if (this.minecraft != null) this.minecraft.setScreen(new BscHudEditScreen(this)); return true; }
             cY += SPACING;
             if (isHovering(relX, relY, tx - 20, cY, 48, 12)) { waitingForKey = true; return true; }
+            cY += SPACING;
+            if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.frittomisto = !BscConfig.frittomisto; BscConfig.save(); return true; }
             cY += (SPACING + 30);
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.displayBingoCard = !BscConfig.displayBingoCard; BscConfig.save(); return true; }
             cY += SPACING;

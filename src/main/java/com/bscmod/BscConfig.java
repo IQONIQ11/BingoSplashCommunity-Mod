@@ -22,6 +22,7 @@ public class BscConfig {
     public static int titleColor = 0xFF00FFFF;
     public static boolean displayBingoCard = false;
     public static boolean playSound = true;
+    public static boolean frittomisto = false;
     public static boolean ironmanOnly = false;
     public static boolean bingoOnly = false;
     public static boolean showHubWarp = false;
