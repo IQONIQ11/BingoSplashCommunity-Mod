@@ -2,11 +2,9 @@ package com.bscmod;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
 import java.net.URI;
@@ -37,6 +35,9 @@ public class NetworkHandler extends Thread {
     private int receivedHeartbeats = 0;
 
     private static final Pattern HUB_PATTERN = Pattern.compile("hub\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
+
+    public static final ResourceLocation SPLASH_SOUND_ID = ResourceLocation.parse("bingosplashcommunity:frittomisto");
+    public static final SoundEvent SPLASH_SOUND_EVENT = SoundEvent.createVariableRangeEvent(SPLASH_SOUND_ID);
 
     @Override
     public void run() {
@@ -251,8 +252,13 @@ public class NetworkHandler extends Thread {
                 client.gui.setTimes(10, stayTicks, 20);
             }
 
-            if (BscConfig.playSound) {
-                client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            if (pingType.equalsIgnoreCase("SPLASH")) {
+                if (BscConfig.playSound && BscConfig.frittomisto) {
+                    // Custom sound
+                    client.player.playSound(SPLASH_SOUND_EVENT, 1.0f, 1.0f);
+                } else if (BscConfig.playSound) {
+                    client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                }
             }
         });
     }
