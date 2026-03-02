@@ -61,6 +61,7 @@ public class BscConfig {
             data.titleColor = titleColor;
             data.displayBingoCard = displayBingoCard;
             data.playSound = playSound;
+            data.frittomisto = frittomisto;
             data.ironmanOnly = ironmanOnly;
             data.bingoOnly = bingoOnly;
             data.showHubWarp = showHubWarp;
@@ -117,6 +118,7 @@ public class BscConfig {
                 titleColor = data.titleColor;
                 displayBingoCard = data.displayBingoCard;
                 playSound = data.playSound;
+                frittomisto = data.frittomisto;
                 ironmanOnly = data.ironmanOnly;
                 bingoOnly = data.bingoOnly;
                 showHubWarp = data.showHubWarp;
@@ -159,7 +161,7 @@ public class BscConfig {
     }
 
     private static class ConfigData {
-        boolean receivePings = true, showTitle = true, displayBingoCard = false, playSound = true, ironmanOnly = false, bingoOnly = false, showHubWarp = false;
+        boolean receivePings = true, showTitle = true, displayBingoCard = false, playSound = true, frittomisto = false, ironmanOnly = false, bingoOnly = false, showHubWarp = false;
         boolean bingoCardBingoProfileOnly = false;
         long alertDuration = 4;
         int titleColor = 0xFF00FFFF;

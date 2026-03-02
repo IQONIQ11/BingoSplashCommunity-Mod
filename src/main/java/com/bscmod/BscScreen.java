@@ -229,7 +229,7 @@ public class BscScreen extends Screen {
             currY += SPACING;
             drawKeybindSetting(context, waitingForKey ? "§e???" : "§b" + BingoSplashCommunity.getSettingsKeyName(), currY, relMouseX, relMouseY);
             currY += SPACING;
-            drawSetting(context, "Italian Meme Mode", "Fritto Misto song.", currY, BscConfig.frittomisto, relMouseX, relMouseY);
+            drawSetting(context, "Fritto Misto", "Plays an Italian meme song when a Splash notification appears.", currY, BscConfig.frittomisto, relMouseX, relMouseY);
             currY += (SPACING + 10);
             drawSubHeader(context, "Bingo Card", currY);
             currY += 20;
