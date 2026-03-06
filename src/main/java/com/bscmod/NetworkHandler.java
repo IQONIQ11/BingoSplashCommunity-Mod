@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +36,7 @@ public class NetworkHandler extends Thread {
     public static long lastPingTime = 0;
     public static volatile String currentSplashDiscordId = "";
     private int receivedHeartbeats = 0;
+    private final AtomicBoolean connecting = new AtomicBoolean(false);
 
     private static final Pattern HUB_PATTERN = Pattern.compile("hub\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
@@ -47,7 +49,7 @@ public class NetworkHandler extends Thread {
                 Instant now = Instant.now();
                 if (lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
                     System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
-                    if (webSocketClient != null) webSocketClient.abort();
+                    if (webSocketClient != null) closeSocket();
                     scheduleReconnect();
                 }
             } catch (InterruptedException e) {
@@ -56,12 +58,14 @@ public class NetworkHandler extends Thread {
         }
     }
 
-    private void connect() {
-        if (!running) return;
+    private synchronized void connect() {
+        if (!running || connecting.getAndSet(true)) return;
+
         client = HttpClient.newHttpClient();
         CompletableFuture<WebSocket> wsFuture = client.newWebSocketBuilder()
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
         wsFuture.whenComplete((ws, ex) -> {
+            connecting.set(false);
             if (ex != null) {
                 System.err.println("[BSC] Connection Error: " + ex.getMessage());
                 ex.printStackTrace();
@@ -77,10 +81,12 @@ public class NetworkHandler extends Thread {
         if (!running) return;
         try {
             Thread.sleep(5000);
-            connect();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        closeSocket();
+        connect();
     }
 
     public void sendMessage(String msg) {
@@ -260,8 +266,14 @@ public class NetworkHandler extends Thread {
     public void disconnect() { closeSocket(); }
 
     private void closeSocket() {
-        if (webSocketClient != null && (webSocketClient.isInputClosed() || webSocketClient.isOutputClosed())) {
-            webSocketClient.sendClose(1000, "User requested disconnect");
+        if (webSocketClient != null) {
+            if (!webSocketClient.isInputClosed() && !webSocketClient.isOutputClosed()) {
+                try {
+                    webSocketClient.sendClose(1000, "User requested disconnect").join();
+                } catch (Exception ignored) {
+                    webSocketClient.abort();
+                }
+            }
             webSocketClient = null;
         }
         if (client != null) client.close();
