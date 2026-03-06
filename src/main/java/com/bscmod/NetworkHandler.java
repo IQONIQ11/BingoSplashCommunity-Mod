@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
-    private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "ws://127.0.0.1:5000/");
+    private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
     private static final int MAX_HEARTBEAT_LOGS = 25;
     private boolean running = true;
     private HttpClient client;
