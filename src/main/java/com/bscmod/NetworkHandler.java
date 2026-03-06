@@ -46,6 +46,7 @@ public class NetworkHandler extends Thread {
                 Thread.sleep(10000);
                 Instant now = Instant.now();
                 if (lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
+                    System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
                     if (webSocketClient != null) webSocketClient.abort();
                     scheduleReconnect();
                 }
@@ -57,14 +58,13 @@ public class NetworkHandler extends Thread {
 
     private void connect() {
         if (!running) return;
-        client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        client = HttpClient.newHttpClient();
         CompletableFuture<WebSocket> wsFuture = client.newWebSocketBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
         wsFuture.whenComplete((ws, ex) -> {
             if (ex != null) {
+                System.err.println("[BSC] Connection Error: " + ex.getMessage());
+                ex.printStackTrace();
                 scheduleReconnect();
             } else {
                 webSocketClient = ws;
@@ -73,11 +73,13 @@ public class NetworkHandler extends Thread {
     }
 
     private void scheduleReconnect() {
+        System.out.println("[BSC] Attempting to reconnect in 5 seconds...");
         if (!running) return;
         try {
             Thread.sleep(5000);
             connect();
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -90,6 +92,7 @@ public class NetworkHandler extends Thread {
     private class WebSocketListener implements WebSocket.Listener {
         @Override
         public void onOpen(WebSocket webSocket) {
+            System.out.println("[BSC] Connected to the Websocket!");
             webSocket.request(1);
         }
 
@@ -98,6 +101,7 @@ public class NetworkHandler extends Thread {
             String message = data.toString();
             if (message.equals("KEEPALIVE")) {
                 if(receivedHeartbeats++ >= MAX_HEARTBEAT_LOGS) {
+                    System.out.println("[BSC] " + MAX_HEARTBEAT_LOGS + " Heartbeats received from server.");
                     receivedHeartbeats = 0;
                 }
                 lastKeepalive = Instant.now();
@@ -120,17 +124,21 @@ public class NetworkHandler extends Thread {
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
+            System.err.println("[BSC] WebSocket Error: " + error.getMessage());
             scheduleReconnect();
         }
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            System.out.println("[BSC] Connection closed! Status: " + statusCode + " | Reason: " + reason);
             scheduleReconnect();
             return null;
         }
     }
 
     private void handleMessage(String message) {
+        System.out.println("Received message: " + message);
+
         String[] allParts = message.split("\\|");
         if (allParts.length < 2) return;
 
@@ -207,17 +215,20 @@ public class NetworkHandler extends Thread {
         final String finalLobby = detectedLobby;
         client.execute(() -> {
             currentSplashDiscordId = senderDiscordId;
+
             MutableComponent mainMsg = Component.literal("§b§l[BSC] §e" + senderName + ": §f" + actualContent);
-            // Logic for JOIN or WARP buttons
+
             if (pingType.equalsIgnoreCase("SPLASH")) {
+                // Check if the ping includes a party join request
                 if (msgLower.contains("/p join")) {
-                    mainMsg.append(Component.literal(" §6§l[JOIN]").withStyle(style ->
+                    mainMsg.append(Component.literal(" §d§l[JOIN]").withStyle(style ->
                             style.withClickEvent(new ClickEvent.RunCommand("/p join " + senderName))
                                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to join §e" + senderName + "§7's party")))
                                     .withColor(ChatFormatting.LIGHT_PURPLE)
                                     .withBold(true)
                     ));
                 }
+                // Otherwise, show the WARP button if there's no p join was detected
                 else if (BscConfig.showHubWarp && !finalLobby.isEmpty()) {
                     mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
                             style.withClickEvent(new ClickEvent.RunCommand("/hub"))
@@ -229,6 +240,7 @@ public class NetworkHandler extends Thread {
             }
 
             client.player.displayClientMessage(mainMsg, false);
+
             if (BscConfig.showTitle) {
                 Component titleText;
                 if (pingType.equalsIgnoreCase("SPLASH")) {
@@ -244,11 +256,13 @@ public class NetworkHandler extends Thread {
                 } else {
                     titleText = Component.literal("§6§lItem Found");
                 }
+
                 int stayTicks = (int) (BscConfig.alertDuration * 20);
                 client.gui.setTitle(titleText);
                 client.gui.setSubtitle(Component.literal("§f" + actualContent));
                 client.gui.setTimes(10, stayTicks, 20);
             }
+
             if (BscConfig.playSound) {
                 client.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
             }
