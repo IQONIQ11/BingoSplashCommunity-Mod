@@ -218,13 +218,25 @@ public class NetworkHandler extends Thread {
 
             MutableComponent mainMsg = Component.literal("§b§l[BSC] §e" + senderName + ": §f" + actualContent);
 
-            if (pingType.equalsIgnoreCase("SPLASH") && BscConfig.showHubWarp && !finalLobby.isEmpty()) {
-                mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
-                        style.withClickEvent(new ClickEvent.RunCommand("/hub"))
-                                .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to warp to Hub")))
-                                .withColor(ChatFormatting.GOLD)
-                                .withBold(true)
-                ));
+            if (pingType.equalsIgnoreCase("SPLASH")) {
+                // Check if the ping includes a party join request
+                if (msgLower.contains("/p join")) {
+                    mainMsg.append(Component.literal(" §d§l[JOIN]").withStyle(style ->
+                            style.withClickEvent(new ClickEvent.RunCommand("/p join " + senderName))
+                                    .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to join §e" + senderName + "§7's party")))
+                                    .withColor(ChatFormatting.LIGHT_PURPLE)
+                                    .withBold(true)
+                    ));
+                }
+                // Otherwise, show the WARP button if there's no p join was detected
+                else if (BscConfig.showHubWarp && !finalLobby.isEmpty()) {
+                    mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
+                            style.withClickEvent(new ClickEvent.RunCommand("/hub"))
+                                    .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to warp to Hub")))
+                                    .withColor(ChatFormatting.GOLD)
+                                    .withBold(true)
+                    ));
+                }
             }
 
             client.player.displayClientMessage(mainMsg, false);
