@@ -89,7 +89,10 @@ public class BscBingoHud {
             boolean isCompleted = false;
             for (Component line : tooltip) {
                 String lineText = ChatFormatting.stripFormatting(line.getString());
-                if (!lineText.isBlank() && (lineText.contains("GOAL REACHED") || lineText.contains("GOAL COMPLETE"))) {
+                if (!lineText.isBlank() &&
+                        (lineText.contains("GOAL REACHED") ||
+                                lineText.contains("GOAL COMPLETE") ||
+                                lineText.contains("✔"))) {
                     isCompleted = true;
                     break;
                 }
@@ -97,7 +100,7 @@ public class BscBingoHud {
 
             if (isCompleted) {
                 String itemName = ChatFormatting.stripFormatting(stack.getHoverName().getString());
-                if (!itemName.isBlank()) continue;
+                if (itemName.isBlank()) continue;
 
                 synchronized (goals) {
                     for (BingoGoal goal : goals) {
