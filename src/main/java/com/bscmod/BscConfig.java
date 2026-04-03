@@ -33,7 +33,7 @@ public class BscConfig {
     public static int bingoHudY = 60;
     public static float bingoHudScale = 1.0f;
     public static int bingoGuideX = 10;
-    public static int bingoGuideY = 150;
+    public static int bingoGuideY = 170;
     public static float bingoGuideScale = 1.0f;
     public static int cardTitleColor = 0xFF00FFFF;
     public static int cardTextColor = 0xFFFFFFFF;
@@ -181,7 +181,7 @@ public class BscConfig {
         String lastBingoSession = "";
         int bingoHudX = 10, bingoHudY = 60, cardTitleColor = 0xFF00FFFF, cardTextColor = 0xFFFFFFFF;
         float bingoHudScale = 1.0f;
-        int bingoGuideX = 10, bingoGuideY = 150, bingoGuideColor = 0xFF00FFFF;
+        int bingoGuideX = 10, bingoGuideY = 170, bingoGuideColor = 0xFF00FFFF;
         float bingoGuideScale = 1.0f;
         boolean displayBingoTimer = false;
         int timerHudX = 10, timerHudY = 150, timerTitleColor = 0xFF00FFFF, timerTextColor = 0xFFFFFFFF;
