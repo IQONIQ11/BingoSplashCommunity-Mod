@@ -10,12 +10,15 @@ import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
+import org.lwjgl.glfw.GLFW
 import java.net.URI
 
 object HowToBingoDisplay {
     const val url = "https://raw.githubusercontent.com/IQONIQ11/bingo-goals/refs/heads/main/guide.txt"
     var activeGuide: String? = null
+    var hoveringGuide: String? = null
     var isLoading: Boolean = false
     var guides = mutableListOf<BingoGuide>()
 
@@ -37,6 +40,64 @@ object HowToBingoDisplay {
                 renderCard(context, client.font)
             }
         })
+    }
+
+    fun handleGuideOverview(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        context.pose().pushMatrix()
+
+        val availableGuides = guides.filterNot { BscConfig.completedGoals.contains(it.name) }
+
+        if(availableGuides.isEmpty()) return
+
+        val font = Minecraft.getInstance().font
+
+        val guideDisplayHeight = Minecraft.getInstance().window.guiScaledHeight / 2
+        val guideElementHeight = font.lineHeight + 2
+        val totalGuideDisplayHeight = guideElementHeight * (availableGuides.size + 1)
+
+        context.pose().translateLocal(10.toFloat(), guideDisplayHeight.toFloat())
+
+        val firstElementY = -(totalGuideDisplayHeight / 2)
+        context.drawString(font, "Available Bingo Guides:", 0, firstElementY, 0xFFFFFFFF.toInt(), true)
+
+        var hoveredGuide: String? = null
+
+        for((index, guide) in availableGuides.withIndex()) {
+            val text = "${
+                if(activeGuide == guide.name) {
+                    "★"
+                } else {
+                    "⭕"
+                }
+            } ${guide.name}"
+
+            val elementY = (index + 1) * guideElementHeight - (totalGuideDisplayHeight / 2)
+
+            context.drawString(font, text, 0, elementY, 0xFFFFFFFF.toInt(), true)
+
+            val listStartOnScreen = guideDisplayHeight - (totalGuideDisplayHeight / 2)
+
+            val absoluteTop = listStartOnScreen + ((index + 1) * guideElementHeight)
+            val absoluteBottom = absoluteTop + font.lineHeight
+
+            if (mouseX in 10..font.width(text) + 10 && mouseY in absoluteTop - 1..< absoluteBottom) {
+                hoveredGuide = guide.name
+            }
+        }
+
+        hoveringGuide = hoveredGuide
+
+        context.pose().popMatrix()
+    }
+
+    fun handleGuideClick(mouseButtonEvent: MouseButtonEvent) {
+        if(hoveringGuide == null) return
+
+        if(mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            activeGuide = hoveringGuide
+        } else if(mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            activeGuide = null
+        }
     }
 
     fun renderCard(context: GuiGraphics, textRenderer: Font) {
