@@ -21,6 +21,7 @@ class BingoSplashCommunity : ClientModInitializer {
         BscConfig.load()
         BscBingoHud.register()
         BingoRolesRenderer.fetchLatestRoles()
+        HowToBingoDisplay.register()
 
         settingsKey = KeyBindingHelper.registerKeyBinding(
             KeyMapping(
