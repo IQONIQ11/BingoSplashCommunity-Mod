@@ -49,7 +49,7 @@ public class BscHudEditScreen extends Screen {
         if(BscConfig.displayBingoGuide) {
             renderEditorElement(context, "Bingo Guide", BscConfig.bingoGuideX, BscConfig.bingoGuideY, 100, 15,
                     BscConfig.bingoGuideScale, draggingGuide, resizingGuide);
-            HowToBingoDisplay.INSTANCE.renderCard(context, this.font);
+            HowToBingoDisplay.INSTANCE.renderGuide(context, this.font);
         }
 
         // Footer Instructions

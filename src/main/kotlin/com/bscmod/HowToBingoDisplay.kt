@@ -37,7 +37,7 @@ object HowToBingoDisplay {
             if (client.screen is BscScreen || client.screen is BscHudEditScreen) return@HudRenderCallback
 
             if (BscConfig.displayBingoGuide) {
-                renderCard(context, client.font)
+                renderGuide(context, client.font)
             }
         })
     }
@@ -100,7 +100,7 @@ object HowToBingoDisplay {
         }
     }
 
-    fun renderCard(context: GuiGraphics, textRenderer: Font) {
+    fun renderGuide(context: GuiGraphics, textRenderer: Font) {
         context.pose().pushMatrix()
         context.pose().translateLocal(BscConfig.bingoGuideX.toFloat(), BscConfig.bingoGuideY.toFloat())
         val scale = BscConfig.bingoHudScale
@@ -110,7 +110,11 @@ object HowToBingoDisplay {
             val guide = guides.firstOrNull { it.name == activeGuide }
 
             if(activeGuide != null && guide != null) {
-                context.drawString(textRenderer, "Guide: ${guide.explanation}", 0, 0, BscConfig.bingoGuideColor, true)
+                "Guide: ${guide.explanation}".split("\\n").forEachIndexed { index, line ->
+                    val y = (index * textRenderer.lineHeight)
+
+                    context.drawString(textRenderer, line, 0, y, BscConfig.bingoGuideColor, true)
+                }
             }
         }
         context.pose().popMatrix()
