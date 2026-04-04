@@ -36,13 +36,21 @@ object HowToBingoDisplay {
             if (client.player == null || client.options.hideGui) return@HudRenderCallback
             if (client.screen is BscScreen || client.screen is BscHudEditScreen) return@HudRenderCallback
 
-            if (BscConfig.displayBingoGuide) {
+            val currentProfile = HypixelUtils.getProfileType()
+            val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
+
+            if (isBingoProfile && BscConfig.displayBingoGuide) {
                 renderGuide(context, client.font)
             }
         })
     }
 
     fun handleGuideOverview(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        val currentProfile = HypixelUtils.getProfileType()
+        val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
+
+        if(!isBingoProfile) return
+
         context.pose().pushMatrix()
 
         val availableGuides = guides.filterNot { BscConfig.completedGoals.contains(it.name) }
