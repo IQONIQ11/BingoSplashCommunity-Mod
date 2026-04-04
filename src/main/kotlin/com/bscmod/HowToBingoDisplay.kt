@@ -103,7 +103,7 @@ object HowToBingoDisplay {
     fun renderGuide(context: GuiGraphics, textRenderer: Font) {
         context.pose().pushMatrix()
         context.pose().translateLocal(BscConfig.bingoGuideX.toFloat(), BscConfig.bingoGuideY.toFloat())
-        val scale = BscConfig.bingoHudScale
+        val scale = BscConfig.bingoGuideScale
         context.pose().scale(scale, scale)
 
         synchronized(guides) {

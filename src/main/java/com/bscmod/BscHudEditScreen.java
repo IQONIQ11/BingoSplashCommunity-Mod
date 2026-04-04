@@ -47,7 +47,7 @@ public class BscHudEditScreen extends Screen {
 
         // --- Render HUD 3: Bingo Guide Display ---
         if(BscConfig.displayBingoGuide) {
-            renderEditorElement(context, "Bingo Guide", BscConfig.bingoGuideX, BscConfig.bingoGuideY, 100, 15,
+            renderEditorElement(context, "Bingo Guide", BscConfig.bingoGuideX, BscConfig.bingoGuideY, 250, 26,
                     BscConfig.bingoGuideScale, draggingGuide, resizingGuide);
             HowToBingoDisplay.INSTANCE.renderGuide(context, this.font);
         }
@@ -82,7 +82,7 @@ public class BscHudEditScreen extends Screen {
         if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 100, 15, BscConfig.timerHudScale, "timer")) return true;
 
         // Check Bingo Guide
-        if(BscConfig.displayBingoGuide && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoGuideX, BscConfig.bingoGuideY, 130, 100, BscConfig.bingoGuideScale, "guide")) return true;
+        if(BscConfig.displayBingoGuide && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoGuideX, BscConfig.bingoGuideY, 250, 26, BscConfig.bingoGuideScale, "guide")) return true;
 
         // Check Bingo Card
         if (BscConfig.displayBingoCard && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoHudX, BscConfig.bingoHudY, 130, 100, BscConfig.bingoHudScale, "bingo")) return true;
@@ -124,7 +124,7 @@ public class BscHudEditScreen extends Screen {
         } else if (resizingTimer) {
             BscConfig.timerHudScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.timerHudX) / 100.0), 0.5f, 3.0f);
         } else if(resizingGuide) {
-            BscConfig.bingoGuideScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.timerHudX) / 100.0), 0.5f, 3.0f);
+            BscConfig.bingoGuideScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.bingoGuideX) / 100.0), 0.5f, 3.0f);
         } else if (draggingBingo) {
             BscConfig.bingoHudX = (int) (mouseButtonEvent.x() - dragOffsetX);
             BscConfig.bingoHudY = (int) (mouseButtonEvent.y() - dragOffsetY);
