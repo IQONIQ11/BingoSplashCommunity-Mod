@@ -1,14 +1,13 @@
 package com.bscmod;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFW;
 
@@ -22,8 +21,8 @@ import java.util.List;
 public class BscScreen extends Screen {
     private final Screen parent;
     private static final String DISCORD_URL = "https://discord.gg/bingo";
-    private static final ResourceLocation DISCORD_ICON = ResourceLocation.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/discord.png");
-    private static final ResourceLocation MOD_LOGO = ResourceLocation.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/logo.png");
+    private static final Identifier DISCORD_ICON = Identifier.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/discord.png");
+    private static final Identifier MOD_LOGO = Identifier.fromNamespaceAndPath("bingosplashcommunity", "textures/gui/logo.png");
     private static final ZoneId TARGET_ZONE = ZoneOffset.UTC;
 
     private int x, y, windowWidth, windowHeight;

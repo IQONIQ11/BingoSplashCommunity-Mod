@@ -56,7 +56,7 @@ public class BscHudEditScreen extends Screen {
 
         // Guide Box & Border
         context.fill(x - 2, y - 2, x + sw + 2, y + sh + 2, (isDragging || isResizing) ? 0x4455FFFF : 0x22FFFFFF);
-        context.submitOutline(x - 3, y - 3, sw + 6, sh + 6, 0xFF55FFFF);
+        context.renderOutline(x - 3, y - 3, sw + 6, sh + 6, 0xFF55FFFF);
 
         // Resize Handle
         int handleColor = isResizing ? 0xFFFFFF00 : 0xFFFFFFFF;

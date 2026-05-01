@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin {
     @Inject(method = "renderSlot", at = @At("TAIL"))
-    private void renderSlot(GuiGraphics guiGraphics, Slot slot, CallbackInfo ci) {
+    private void renderSlot(GuiGraphics guiGraphics, Slot slot, int i, int j, CallbackInfo ci) {
         // 1. Valid Check
         if (NetworkHandler.activeLobby == null || NetworkHandler.activeLobby.isEmpty()) return;
 
