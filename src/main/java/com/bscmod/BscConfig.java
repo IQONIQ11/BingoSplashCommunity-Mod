@@ -21,6 +21,7 @@ public class BscConfig {
     public static long alertDuration = 4;
     public static int titleColor = 0xFF00FFFF;
     public static boolean displayBingoCard = false;
+    public static boolean displayBingoGuide = true;
     public static boolean playSound = true;
     public static boolean ironmanOnly = false;
     public static boolean bingoOnly = false;
@@ -31,8 +32,12 @@ public class BscConfig {
     public static int bingoHudX = 10;
     public static int bingoHudY = 60;
     public static float bingoHudScale = 1.0f;
+    public static int bingoGuideX = 10;
+    public static int bingoGuideY = 170;
+    public static float bingoGuideScale = 1.0f;
     public static int cardTitleColor = 0xFF00FFFF;
     public static int cardTextColor = 0xFFFFFFFF;
+    public static int bingoGuideColor = 0xFF00FFFF;
 
     public static List<String> completedGoals = new ArrayList<>();
     public static String lastBingoSession = "";
@@ -59,6 +64,7 @@ public class BscConfig {
             data.alertDuration = alertDuration;
             data.titleColor = titleColor;
             data.displayBingoCard = displayBingoCard;
+            data.displayBingoGuide = displayBingoGuide;
             data.playSound = playSound;
             data.ironmanOnly = ironmanOnly;
             data.bingoOnly = bingoOnly;
@@ -69,6 +75,10 @@ public class BscConfig {
             data.bingoHudX = bingoHudX;
             data.bingoHudY = bingoHudY;
             data.bingoHudScale = bingoHudScale;
+            data.bingoGuideX = bingoGuideX;
+            data.bingoGuideY = bingoGuideY;
+            data.bingoGuideColor = bingoGuideColor;
+            data.bingoGuideScale = bingoGuideScale;
             data.cardTitleColor = cardTitleColor;
             data.cardTextColor = cardTextColor;
             data.displayBingoTimer = displayBingoTimer;
@@ -115,6 +125,7 @@ public class BscConfig {
                 alertDuration = data.alertDuration;
                 titleColor = data.titleColor;
                 displayBingoCard = data.displayBingoCard;
+                displayBingoGuide = data.displayBingoGuide;
                 playSound = data.playSound;
                 ironmanOnly = data.ironmanOnly;
                 bingoOnly = data.bingoOnly;
@@ -125,6 +136,10 @@ public class BscConfig {
                 bingoHudX = data.bingoHudX;
                 bingoHudY = data.bingoHudY;
                 bingoHudScale = data.bingoHudScale;
+                bingoGuideX = data.bingoGuideX;
+                bingoGuideY = data.bingoGuideY;
+                bingoGuideColor = data.bingoGuideColor;
+                bingoGuideScale = data.bingoGuideScale;
                 cardTitleColor = data.cardTitleColor;
                 cardTextColor = data.cardTextColor;
                 displayBingoTimer = data.displayBingoTimer;
@@ -158,7 +173,7 @@ public class BscConfig {
     }
 
     private static class ConfigData {
-        boolean receivePings = true, showTitle = true, displayBingoCard = false, playSound = true, ironmanOnly = false, bingoOnly = false, showHubWarp = false;
+        boolean receivePings = true, showTitle = true, displayBingoCard = false, displayBingoGuide = true, playSound = true, ironmanOnly = false, bingoOnly = false, showHubWarp = false;
         boolean bingoCardBingoProfileOnly = false;
         long alertDuration = 4;
         int titleColor = 0xFF00FFFF;
@@ -166,6 +181,8 @@ public class BscConfig {
         String lastBingoSession = "";
         int bingoHudX = 10, bingoHudY = 60, cardTitleColor = 0xFF00FFFF, cardTextColor = 0xFFFFFFFF;
         float bingoHudScale = 1.0f;
+        int bingoGuideX = 10, bingoGuideY = 170, bingoGuideColor = 0xFF00FFFF;
+        float bingoGuideScale = 1.0f;
         boolean displayBingoTimer = false;
         int timerHudX = 10, timerHudY = 150, timerTitleColor = 0xFF00FFFF, timerTextColor = 0xFFFFFFFF;
         float timerHudScale = 1.0f;
