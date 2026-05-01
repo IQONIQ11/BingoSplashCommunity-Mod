@@ -22,7 +22,7 @@ object HowToBingoDisplay {
     var isLoading: Boolean = false
     var guides = mutableListOf<BingoGuide>()
 
-    data class BingoGuide(val name: String, val explanation: String)
+    data class BingoGuide(val name: String, val description: String, val explanation: String)
 
     fun register() {
         fetchGuides()
@@ -77,7 +77,7 @@ object HowToBingoDisplay {
                 } else {
                     "⭕"
                 }
-            } ${guide.name}"
+            } ${guide.name}: ${guide.description}"
 
             val elementY = (index + 1) * guideElementHeight - (totalGuideDisplayHeight / 2)
 
@@ -152,14 +152,14 @@ object HowToBingoDisplay {
 
                 url.openStream().bufferedReader().useLines { lines ->
                     lines.forEach { line ->
-                        val (name, description) = line.trim()
+                        val (name, description, explanation) = line.trim()
                             .takeIf { it.isNotEmpty() }
-                            ?.split("|", limit = 2)
-                            ?.takeIf { it.size == 2 }
+                            ?.split("|", limit = 3)
+                            ?.takeIf { it.size == 3 }
                             ?.map { it.trim() }
                             ?: return@forEach
 
-                        downloadedGuides.add(BingoGuide(name, description))
+                        downloadedGuides.add(BingoGuide(name, description, explanation))
                     }
                 }
 
@@ -170,7 +170,7 @@ object HowToBingoDisplay {
             } catch (_: Exception) {
                 synchronized(guides) {
                     guides.clear()
-                    guides.add(BingoGuide("Error loading guides", "§cFetch Failed"))
+                    guides.add(BingoGuide("Error loading guides", "§cFetch Failed", "§cFetch Failed"))
                 }
             } finally {
                 isLoading = false

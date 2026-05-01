@@ -239,6 +239,10 @@ public class BscScreen extends Screen {
             currY += SPACING;
             drawColorSetting(context, "Card Text", BscConfig.cardTextColor, currY, relMouseX, relMouseY);
             currY += (SPACING + 10);
+            drawSubHeader(context, "Bingo Guide", currY);
+            currY += 20;
+            drawSetting(context, "Display Bingo Guide", "Show the guide on your HUD.", currY, BscConfig.displayBingoGuide, relMouseX, relMouseY);
+            currY += (SPACING + 10);
             drawSubHeader(context, "Bingo Timer", currY);
             currY += 20;
             drawSetting(context, "Display Bingo Timer", "Show the event timer on your HUD.", currY, BscConfig.displayBingoTimer, relMouseX, relMouseY);
@@ -386,7 +390,7 @@ public class BscScreen extends Screen {
 
     private void resetAllToDefaults() {
         BscConfig.receivePings = true; BscConfig.showTitle = true; BscConfig.playSound = true; BscConfig.titleColor = 0xFF00FFFF;
-        BscConfig.displayBingoCard = false; BscConfig.displayBingoTimer = false;
+        BscConfig.displayBingoCard = false; BscConfig.displayBingoTimer = false; BscConfig.displayBingoGuide = false;
         BscConfig.bingoCardBingoProfileOnly = false;
         BscConfig.cardTitleColor = 0xFF00FFFF; BscConfig.cardTextColor = 0xFFFFFFFF;
         BscConfig.timerTitleColor = 0xFF00FFFF; BscConfig.timerTextColor = 0xFFFFFFFF;
@@ -456,6 +460,8 @@ public class BscScreen extends Screen {
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.cardTitleColor = getNextColor(BscConfig.cardTitleColor); BscConfig.save(); return true; }
             cY += SPACING;
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.cardTextColor = getNextColor(BscConfig.cardTextColor); BscConfig.save(); return true; }
+            cY += (SPACING + 30);
+            if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.displayBingoGuide = !BscConfig.displayBingoGuide; BscConfig.save(); return true; }
             cY += (SPACING + 30);
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.displayBingoTimer = !BscConfig.displayBingoTimer; BscConfig.save(); return true; }
             cY += SPACING;
