@@ -18,8 +18,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,10 +26,17 @@ import java.util.regex.Pattern;
 public class NetworkHandler extends Thread {
     private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
     private static final int MAX_HEARTBEAT_LOGS = 25;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "BSC-Reconnect-Thread");
+        t.setDaemon(true);
+        return t;
+    });
+
     private boolean running = true;
     private HttpClient client;
     private WebSocket webSocketClient;
-    private Instant lastKeepalive = Instant.now();
+    private final AtomicBoolean reconnecting = new AtomicBoolean(false);
+    private volatile Instant lastKeepalive = Instant.now();
 
     public static String activeLobby = "";
     public static long lastPingTime = 0;
@@ -47,8 +53,8 @@ public class NetworkHandler extends Thread {
             try {
                 Thread.sleep(10000);
                 Instant now = Instant.now();
-                if (running && !connecting.get() && lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
-                    System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
+                if (!connecting.get() && !reconnecting.get() && lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
+                    System.out.println("[BSC] No KEEPALIVE was received for 2 minutes, reconnecting...");
                     if (webSocketClient != null) closeSocket();
                     scheduleReconnect();
                 }
@@ -61,10 +67,12 @@ public class NetworkHandler extends Thread {
     private synchronized void connect() {
         if (!running || connecting.getAndSet(true)) return;
 
+        lastKeepalive = Instant.now();
+
         client = HttpClient.newHttpClient();
         CompletableFuture<WebSocket> wsFuture = client.newWebSocketBuilder()
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
-        wsFuture.whenComplete((ws, ex) -> {
+        wsFuture.whenCompleteAsync((ws, ex) -> {
             connecting.set(false);
             if (ex != null) {
                 System.err.println("[BSC] Connection Error: " + ex.getMessage());
@@ -73,20 +81,23 @@ public class NetworkHandler extends Thread {
             } else {
                 webSocketClient = ws;
             }
-        });
+        }, scheduler);
     }
 
     private void scheduleReconnect() {
-        System.out.println("[BSC] Attempting to reconnect in 5 seconds...");
         if (!running) return;
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        if (!reconnecting.compareAndSet(false, true)) return;
+        System.out.println("[BSC] Attempting to reconnect in 5 seconds...");
+        lastKeepalive = Instant.now();
 
-        closeSocket();
-        connect();
+        scheduler.schedule(() -> {
+            try {
+                closeSocket();
+                connect();
+            } finally {
+                reconnecting.set(false);
+            }
+        }, 5, TimeUnit.SECONDS);
     }
 
     public void sendMessage(String msg) {
@@ -265,7 +276,7 @@ public class NetworkHandler extends Thread {
 
     public void disconnect() { closeSocket(); }
 
-    private void closeSocket() {
+    private synchronized void closeSocket() {
         if (webSocketClient != null) {
             if (!webSocketClient.isInputClosed() && !webSocketClient.isOutputClosed()) {
                 try {
@@ -276,11 +287,22 @@ public class NetworkHandler extends Thread {
             }
             webSocketClient = null;
         }
-        if (client != null) client.close();
+        if (client != null) {
+            client.close();
+            client = null;
+        }
     }
 
     public void stopListener() {
         this.running = false;
         disconnect();
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(1, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+        }
     }
 }
