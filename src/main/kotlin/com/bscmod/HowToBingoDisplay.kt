@@ -5,13 +5,13 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.Game
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.ChatFormatting
-import net.minecraft.Util
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 import java.net.URI
 
@@ -49,13 +49,13 @@ object HowToBingoDisplay {
         val currentProfile = HypixelUtils.getProfileType()
         val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
 
-        if(!isBingoProfile) return
+        if (!isBingoProfile) return
 
         context.pose().pushMatrix()
 
         val availableGuides = guides.filterNot { BscConfig.completedGoals.contains(it.name) }
 
-        if(availableGuides.isEmpty()) return
+        if (availableGuides.isEmpty()) return
 
         val font = Minecraft.getInstance().font
 
@@ -70,9 +70,9 @@ object HowToBingoDisplay {
 
         var hoveredGuide: String? = null
 
-        for((index, guide) in availableGuides.withIndex()) {
+        for ((index, guide) in availableGuides.withIndex()) {
             val text = "${
-                if(activeGuide == guide.name) {
+                if (activeGuide == guide.name) {
                     "★"
                 } else {
                     "⭕"
@@ -88,7 +88,7 @@ object HowToBingoDisplay {
             val absoluteTop = listStartOnScreen + ((index + 1) * guideElementHeight)
             val absoluteBottom = absoluteTop + font.lineHeight
 
-            if (mouseX in 10..font.width(text) + 10 && mouseY in absoluteTop - 1..< absoluteBottom) {
+            if (mouseX in 10..font.width(text) + 10 && mouseY in absoluteTop - 1..<absoluteBottom) {
                 hoveredGuide = guide.name
             }
         }
@@ -99,11 +99,11 @@ object HowToBingoDisplay {
     }
 
     fun handleGuideClick(mouseButtonEvent: MouseButtonEvent) {
-        if(hoveringGuide == null) return
+        if (hoveringGuide == null) return
 
-        if(mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             activeGuide = hoveringGuide
-        } else if(mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        } else if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             activeGuide = null
         }
     }
@@ -117,7 +117,7 @@ object HowToBingoDisplay {
         synchronized(guides) {
             val guide = guides.firstOrNull { it.name == activeGuide }
 
-            if(activeGuide != null && guide != null) {
+            if (activeGuide != null && guide != null) {
                 "Guide: ${guide.explanation}".split("\\n").forEachIndexed { index, line ->
                     val y = (index * textRenderer.lineHeight)
 
@@ -129,11 +129,11 @@ object HowToBingoDisplay {
     }
 
     fun onChatMessage(text: String) {
-        if(text.startsWith("BINGO GOAL COMPLETE! ")) {
+        if (text.startsWith("BINGO GOAL COMPLETE! ")) {
             try {
                 val cleanText = ChatFormatting.stripFormatting(text)!!.replace("BINGO GOAL COMPLETE!", "").trim()
 
-                if(cleanText.equals(activeGuide, ignoreCase = true)) {
+                if (cleanText.equals(activeGuide, ignoreCase = true)) {
                     activeGuide = null
                 }
             } catch (_: Exception) { }
