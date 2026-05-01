@@ -47,7 +47,7 @@ public class NetworkHandler extends Thread {
             try {
                 Thread.sleep(10000);
                 Instant now = Instant.now();
-                if (lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
+                if (running && !connecting.get() && lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
                     System.out.println("No KEEPALIVE was received for 2 minutes, reconnecting...");
                     if (webSocketClient != null) closeSocket();
                     scheduleReconnect();
