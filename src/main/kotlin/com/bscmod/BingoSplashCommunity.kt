@@ -1,7 +1,6 @@
 package com.bscmod
 
 import com.mojang.blaze3d.platform.InputConstants
-import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.api.ClientModInitializer
@@ -12,9 +11,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
-import net.minecraft.commands.CommandBuildContext
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class BingoSplashCommunity : ClientModInitializer {
     override fun onInitializeClient() {
@@ -28,12 +26,12 @@ class BingoSplashCommunity : ClientModInitializer {
                 "key.bsc.settings",
                 InputConstants.Type.KEYSYM,
                 InputConstants.UNKNOWN.value,
-                KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath("bsc", "main"))
+                KeyMapping.Category.register(Identifier.fromNamespaceAndPath("bsc", "main"))
             )
         )
 
-        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher: CommandDispatcher<FabricClientCommandSource?>?, _: CommandBuildContext? ->
-            dispatcher!!.register(
+        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher, _ ->
+            dispatcher.register(
                 ClientCommandManager.literal("bsc")
                     .executes { _: CommandContext<FabricClientCommandSource> ->
                         scrollQueueOpen = true
