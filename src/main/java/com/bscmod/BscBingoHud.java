@@ -201,6 +201,12 @@ public class BscBingoHud {
         });
     }
 
+    public static int calculateTotalHeight() {
+        synchronized (goals) {
+            return (goals.size() * 10) + 12;
+        }
+    }
+
     public static void renderCard(GuiGraphics context, Font textRenderer) {
         context.pose().pushMatrix();
         context.pose().translateLocal(BscConfig.bingoHudX, BscConfig.bingoHudY);

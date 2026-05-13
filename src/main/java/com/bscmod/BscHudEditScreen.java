@@ -33,14 +33,14 @@ public class BscHudEditScreen extends Screen {
 
         // --- Render HUD 1: Bingo Card ---
         if (BscConfig.displayBingoCard) {
-            renderEditorElement(context, "Bingo Card", BscConfig.bingoHudX, BscConfig.bingoHudY, 130, 100,
+            renderEditorElement(context, "Bingo Card", BscConfig.bingoHudX, BscConfig.bingoHudY, 130, BscBingoHud.calculateTotalHeight(),
                     BscConfig.bingoHudScale, draggingBingo, resizingBingo, true);
             BscBingoHud.renderCard(context, this.font);
         }
 
         // --- Render HUD 2: Bingo Timer ---
         if (BscConfig.displayBingoTimer) {
-            renderEditorElement(context, "Bingo Timer", BscConfig.timerHudX, BscConfig.timerHudY, 100, 15,
+            renderEditorElement(context, "Bingo Timer", BscConfig.timerHudX, BscConfig.timerHudY, 125, 10,
                     BscConfig.timerHudScale, draggingTimer, resizingTimer, true);
             BscBingoHud.renderTimer(context, this.font);
         }
@@ -87,13 +87,13 @@ public class BscHudEditScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
         // Check Timer First (since it's usually smaller)
-        if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 100, 15, BscConfig.timerHudScale, "timer")) return true;
+        if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 125, 10, BscConfig.timerHudScale, "timer")) return true;
 
         // Check Bingo Guide
         if (BscConfig.displayBingoGuide && HowToBingoDisplay.INSTANCE.isActive() && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoGuideX, BscConfig.bingoGuideY, BscConfig.bingoGuideWidth, HowToBingoDisplay.INSTANCE.calculateTextHeight(this.font), BscConfig.bingoGuideScale, "guide")) return true;
 
         // Check Bingo Card
-        if (BscConfig.displayBingoCard && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoHudX, BscConfig.bingoHudY, 130, 100, BscConfig.bingoHudScale, "bingo")) return true;
+        if (BscConfig.displayBingoCard && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoHudX, BscConfig.bingoHudY, 130, BscBingoHud.calculateTotalHeight(), BscConfig.bingoHudScale, "bingo")) return true;
 
         return super.mouseClicked(mouseButtonEvent, bl);
     }
