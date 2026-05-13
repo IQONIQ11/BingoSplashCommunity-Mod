@@ -35,6 +35,7 @@ public class BscConfig {
     public static int bingoGuideX = 10;
     public static int bingoGuideY = 170;
     public static float bingoGuideScale = 1.0f;
+    public static int bingoGuideWidth = 300;
     public static int cardTitleColor = 0xFF00FFFF;
     public static int cardTextColor = 0xFFFFFFFF;
     public static int bingoGuideColor = 0xFF00FFFF;
@@ -79,6 +80,7 @@ public class BscConfig {
             data.bingoGuideY = bingoGuideY;
             data.bingoGuideColor = bingoGuideColor;
             data.bingoGuideScale = bingoGuideScale;
+            data.bingoGuideWidth = bingoGuideWidth;
             data.cardTitleColor = cardTitleColor;
             data.cardTextColor = cardTextColor;
             data.displayBingoTimer = displayBingoTimer;
@@ -140,6 +142,7 @@ public class BscConfig {
                 bingoGuideY = data.bingoGuideY;
                 bingoGuideColor = data.bingoGuideColor;
                 bingoGuideScale = data.bingoGuideScale;
+                bingoGuideWidth = data.bingoGuideWidth;
                 cardTitleColor = data.cardTitleColor;
                 cardTextColor = data.cardTextColor;
                 displayBingoTimer = data.displayBingoTimer;
@@ -183,6 +186,7 @@ public class BscConfig {
         float bingoHudScale = 1.0f;
         int bingoGuideX = 10, bingoGuideY = 170, bingoGuideColor = 0xFF00FFFF;
         float bingoGuideScale = 1.0f;
+        int bingoGuideWidth = 300;
         boolean displayBingoTimer = false;
         int timerHudX = 10, timerHudY = 150, timerTitleColor = 0xFF00FFFF, timerTextColor = 0xFFFFFFFF;
         float timerHudScale = 1.0f;

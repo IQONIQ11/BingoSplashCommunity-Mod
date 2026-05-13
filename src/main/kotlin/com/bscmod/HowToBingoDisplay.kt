@@ -39,7 +39,7 @@ object HowToBingoDisplay {
             val currentProfile = HypixelUtils.getProfileType()
             val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
 
-            if (isBingoProfile && BscConfig.displayBingoGuide) {
+            if (isBingoProfile && BscConfig.displayBingoGuide) { // TODO find a way to debug the guide feature
                 renderGuide(context, client.font)
             }
         })
@@ -49,7 +49,7 @@ object HowToBingoDisplay {
         val currentProfile = HypixelUtils.getProfileType()
         val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
 
-        if (!isBingoProfile) return
+        if (!isBingoProfile) return // TODO find a way to debug the guide feature
 
         context.pose().pushMatrix()
 
@@ -109,23 +109,115 @@ object HowToBingoDisplay {
     }
 
     fun renderGuide(context: GuiGraphics, textRenderer: Font) {
+        val x = BscConfig.bingoGuideX
+        val y = BscConfig.bingoGuideY
+        val width = BscConfig.bingoGuideWidth
+        val height = 250
+
         context.pose().pushMatrix()
-        context.pose().translateLocal(BscConfig.bingoGuideX.toFloat(), BscConfig.bingoGuideY.toFloat())
-        val scale = BscConfig.bingoGuideScale
-        context.pose().scale(scale, scale)
+        // Don't translate - we'll use relative coordinates instead
+
+        // Draw the semi-transparent background box with border (like other HUD elements)
+        val bgColor = 0x77121212  // Semi-transparent dark gray background
+        val borderColor = 0x77242424  // Use configurable border color
+
+        // Render the guide text with word wrapping
+        synchronized(guides) {
+            val guide = guides.firstOrNull { it.name == activeGuide }
+
+            if(activeGuide == null || guide == null) return@synchronized
+
+            val guideText = "Guide: ${guide.explanation}"
+
+            val wrappedText = wrapText(
+                textRenderer,
+                guideText,
+                width - 4
+            )
+
+            val totalHeight = wrappedText.size * (textRenderer.lineHeight + 2) + 2
+
+            context.fill(x - 2, y - 2, x + width, y + totalHeight, bgColor)
+            context.renderOutline(
+                x - 2,
+                y - 2,
+                width + 2,
+                totalHeight + 2,
+                borderColor
+            )
+
+            val lineHeight = textRenderer.lineHeight + 2
+            val maxHeight = height - 4
+
+            for ((index, line) in wrappedText.withIndex()) {
+                val yOffset = (index * lineHeight).coerceAtMost(maxHeight - lineHeight)
+                context.drawString(textRenderer, line.trim(), x + 2, y + 2 + yOffset, BscConfig.bingoGuideColor, true)
+            }
+        }
+
+        context.pose().popMatrix()
+    }
+
+    fun isActive(): Boolean {
+        return activeGuide != null && guides.any { it.name == activeGuide }
+    }
+
+    fun calculateTextHeight(textRenderer: Font): Int {
+        val width = BscConfig.bingoGuideWidth
 
         synchronized(guides) {
             val guide = guides.firstOrNull { it.name == activeGuide }
 
-            if (activeGuide != null && guide != null) {
-                "Guide: ${guide.explanation}".split("\\n").forEachIndexed { index, line ->
-                    val y = (index * textRenderer.lineHeight)
+            if(activeGuide == null || guide == null) return 0
 
-                    context.drawString(textRenderer, line, 0, y, BscConfig.bingoGuideColor, true)
-                }
+            val guideText = "Guide: ${guide.explanation}"
+
+            val wrappedText = wrapText(
+                textRenderer,
+                guideText,
+                width - 4
+            )
+
+            return wrappedText.size * (textRenderer.lineHeight + 2) + 2
+        }
+    }
+
+    private fun wrapText(
+        font: Font,
+        fullText: String,
+        maxWidth: Int,  // Maximum pixel width for each line
+    ): List<String> {
+        if (fullText.isEmpty()) return listOf()
+
+        // Split the full text into wrapped lines at word boundaries
+        val wrappedLines = mutableListOf<String>()
+        var remainingWords = fullText.trimEnd().split(" ").filter { it.isNotEmpty() }
+
+        if (remainingWords.isEmpty()) return listOf()
+
+        val currentLine = StringBuilder()
+        for (word in remainingWords) {
+            // Check if adding this word would exceed maxWidth
+            val nextWidth = font.width("$currentLine $word")
+
+            if (nextWidth <= maxWidth) {
+                // Word fits on current line - add it with a space separator
+                currentLine.append(" ")
+                currentLine.append(word)
+            } else {
+                // Word doesn't fit - save the current line and start new one
+                wrappedLines.add(currentLine.toString())
+                currentLine.clear()
+                currentLine.append(word)
             }
         }
-        context.pose().popMatrix()
+
+        // Don't forget the last line (if there's any content left)
+        if (currentLine.isNotEmpty()) {
+            wrappedLines.add(currentLine.trim().toString())
+        }
+
+        return wrappedLines
     }
 
     fun onChatMessage(text: String) {
