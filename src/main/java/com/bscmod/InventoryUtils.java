@@ -1,10 +1,10 @@
 package com.bscmod;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.inventory.Slot;
 
 public class InventoryUtils {
-    public static void renderHighlight(GuiGraphics context, Slot slot) {
+    public static void renderHighlight(GuiGraphicsExtractor context, Slot slot) {
         // 1. Check if we have a stored lobby
         if (NetworkHandler.activeLobby.isEmpty()) return;
 
