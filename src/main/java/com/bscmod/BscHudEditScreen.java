@@ -13,6 +13,7 @@ public class BscHudEditScreen extends Screen {
     // Dragging & Resizing States
     private boolean draggingBingo = false, resizingBingo = false;
     private boolean draggingTimer = false, resizingTimer = false;
+    private boolean draggingGuide = false, resizingGuide = false;
     private double dragOffsetX, dragOffsetY;
 
     public BscHudEditScreen(Screen parent) {
@@ -32,16 +33,23 @@ public class BscHudEditScreen extends Screen {
 
         // --- Render HUD 1: Bingo Card ---
         if (BscConfig.displayBingoCard) {
-            renderEditorElement(context, "Bingo Card", BscConfig.bingoHudX, BscConfig.bingoHudY, 130, 100,
-                    BscConfig.bingoHudScale, draggingBingo, resizingBingo);
+            renderEditorElement(context, "Bingo Card", BscConfig.bingoHudX, BscConfig.bingoHudY, 130, BscBingoHud.calculateTotalHeight(),
+                    BscConfig.bingoHudScale, draggingBingo, resizingBingo, true);
             BscBingoHud.renderCard(context, this.font);
         }
 
         // --- Render HUD 2: Bingo Timer ---
         if (BscConfig.displayBingoTimer) {
-            renderEditorElement(context, "Bingo Timer", BscConfig.timerHudX, BscConfig.timerHudY, 100, 15,
-                    BscConfig.timerHudScale, draggingTimer, resizingTimer);
+            renderEditorElement(context, "Bingo Timer", BscConfig.timerHudX, BscConfig.timerHudY, 125, 10,
+                    BscConfig.timerHudScale, draggingTimer, resizingTimer, true);
             BscBingoHud.renderTimer(context, this.font);
+        }
+
+        // --- Render HUD 3: Bingo Guide Display ---
+        if(BscConfig.displayBingoGuide && HowToBingoDisplay.INSTANCE.isActive()) {
+            renderEditorElement(context, "Bingo Guide", BscConfig.bingoGuideX, BscConfig.bingoGuideY, BscConfig.bingoGuideWidth, HowToBingoDisplay.INSTANCE.calculateTextHeight(this.font),
+                    BscConfig.bingoGuideScale, draggingGuide, resizingGuide, false);
+            HowToBingoDisplay.INSTANCE.renderGuide(context, this.font);
         }
 
         // Footer Instructions
@@ -50,9 +58,17 @@ public class BscHudEditScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderEditorElement(GuiGraphics context, String label, int x, int y, int baseW, int baseH, float scale, boolean isDragging, boolean isResizing) {
-        int sw = (int) (baseW * scale);
-        int sh = (int) (baseH * scale);
+    private void renderEditorElement(GuiGraphics context, String label, int x, int y, int baseW, int baseH, float scale, boolean isDragging, boolean isResizing, boolean renderScale) {
+        int sw;
+        int sh;
+
+        if(renderScale) {
+            sw = (int) (baseW * scale);
+            sh = (int) (baseH * scale);
+        } else {
+            sw = baseW;
+            sh = baseH;
+        }
 
         // Guide Box & Border
         context.fill(x - 2, y - 2, x + sw + 2, y + sh + 2, (isDragging || isResizing) ? 0x4455FFFF : 0x22FFFFFF);
@@ -71,26 +87,45 @@ public class BscHudEditScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
         // Check Timer First (since it's usually smaller)
-        if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 100, 15, BscConfig.timerHudScale, "timer")) return true;
+        if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 125, 10, BscConfig.timerHudScale, "timer")) return true;
+
+        // Check Bingo Guide
+        if (BscConfig.displayBingoGuide && HowToBingoDisplay.INSTANCE.isActive() && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoGuideX, BscConfig.bingoGuideY, BscConfig.bingoGuideWidth, HowToBingoDisplay.INSTANCE.calculateTextHeight(this.font), BscConfig.bingoGuideScale, "guide")) return true;
 
         // Check Bingo Card
-        if (BscConfig.displayBingoCard && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoHudX, BscConfig.bingoHudY, 130, 100, BscConfig.bingoHudScale, "bingo")) return true;
+        if (BscConfig.displayBingoCard && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.bingoHudX, BscConfig.bingoHudY, 130, BscBingoHud.calculateTotalHeight(), BscConfig.bingoHudScale, "bingo")) return true;
 
         return super.mouseClicked(mouseButtonEvent, bl);
     }
 
     private boolean checkInput(double mx, double my, int x, int y, int baseW, int baseH, float scale, String type) {
-        int sw = (int) (baseW * scale);
-        int sh = (int) (baseH * scale);
+        int sw;
+        int sh;
+
+        if(type.equals("guide")) {
+            sw = baseW;
+            sh = baseH;
+        } else {
+            sw = (int) (baseW * scale);
+            sh = (int) (baseH * scale);
+        }
 
         // Handle
         if (mx >= x + sw && mx <= x + sw + 8 && my >= y + sh && my <= y + sh + 8) {
-            if (type.equals("bingo")) resizingBingo = true; else resizingTimer = true;
+            switch (type) {
+                case "bingo" -> resizingBingo = true;
+                case "timer" -> resizingTimer = true;
+                case "guide" -> resizingGuide = true;
+            }
             return true;
         }
         // Body
         if (mx >= x && mx <= x + sw && my >= y && my <= y + sh) {
-            if (type.equals("bingo")) draggingBingo = true; else draggingTimer = true;
+            switch (type) {
+                case "bingo" -> draggingBingo = true;
+                case "timer" -> draggingTimer = true;
+                case "guide" -> draggingGuide = true;
+            }
             dragOffsetX = mx - x;
             dragOffsetY = my - y;
             return true;
@@ -101,22 +136,30 @@ public class BscHudEditScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double deltaX, double deltaY) {
         if (resizingBingo) {
-            BscConfig.bingoHudScale = Math.max(0.5f, Math.min(3.0f, (float)((mouseButtonEvent.x() - BscConfig.bingoHudX) / 130.0)));
+            BscConfig.bingoHudScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.bingoHudX) / 130.0), 0.5f, 3.0f);
         } else if (resizingTimer) {
-            BscConfig.timerHudScale = Math.max(0.5f, Math.min(3.0f, (float)((mouseButtonEvent.x() - BscConfig.timerHudX) / 100.0)));
+            BscConfig.timerHudScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.timerHudX) / 100.0), 0.5f, 3.0f);
+        } else if(resizingGuide) {
+            float scale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.bingoGuideX) / 300), 0.5f, 3.0f);
+
+            BscConfig.bingoGuideScale = scale;
+            BscConfig.bingoGuideWidth = (int) (300 * scale);
         } else if (draggingBingo) {
             BscConfig.bingoHudX = (int) (mouseButtonEvent.x() - dragOffsetX);
             BscConfig.bingoHudY = (int) (mouseButtonEvent.y() - dragOffsetY);
         } else if (draggingTimer) {
             BscConfig.timerHudX = (int) (mouseButtonEvent.x() - dragOffsetX);
             BscConfig.timerHudY = (int) (mouseButtonEvent.y() - dragOffsetY);
+        } else if (draggingGuide) {
+            BscConfig.bingoGuideX = (int) (mouseButtonEvent.x() - dragOffsetX);
+            BscConfig.bingoGuideY = (int) (mouseButtonEvent.y() - dragOffsetY);
         }
         return true;
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
-        draggingBingo = resizingBingo = draggingTimer = resizingTimer = false;
+        draggingBingo = resizingBingo = draggingTimer = resizingTimer = draggingGuide = resizingGuide = false;
         BscConfig.save();
         return super.mouseReleased(mouseButtonEvent);
     }
