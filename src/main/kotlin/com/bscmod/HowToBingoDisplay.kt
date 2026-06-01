@@ -49,7 +49,7 @@ object HowToBingoDisplay {
         val currentProfile = HypixelUtils.getProfileType()
         val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
 
-        if (!isBingoProfile) return // TODO find a way to debug the guide feature
+        if (!isBingoProfile || !BscConfig.displayBingoGuide) return // TODO find a way to debug the guide feature
 
         context.pose().pushMatrix()
 
