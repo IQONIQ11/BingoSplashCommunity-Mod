@@ -9,6 +9,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -17,6 +19,7 @@ import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
 public class UpdateChecker {
+    private static final Logger logger = LoggerFactory.getLogger(UpdateChecker.class);
 
     private static final String MOD_ID = "bingosplashcommunity";
     private static final String GITHUB_REPO = "IQONIQ11/BingoSplashCommunity-Mod";
@@ -66,7 +69,7 @@ public class UpdateChecker {
             }
         } catch (Exception exception) {
             state = UpdateCheckState.NO_UPDATE_FOUND;
-            exception.printStackTrace();
+            logger.error("Failed to check for updates", exception);
         }
     }
 
@@ -101,7 +104,7 @@ public class UpdateChecker {
         Component message = Component.literal("§b[BSC] §6§lNew update available: §f" + latestVersionTag + " ")
                 .append(downloadComponent);
 
-        mc.player.displayClientMessage(message, false);
+        mc.getChatListener().handleSystemMessage(message, false);
     }
 
     private enum UpdateCheckState {

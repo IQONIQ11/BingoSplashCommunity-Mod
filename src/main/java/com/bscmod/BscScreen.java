@@ -1,7 +1,7 @@
 package com.bscmod;
 
 import net.minecraft.util.Util;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.joml.Vector2f;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.time.Duration;
@@ -17,7 +18,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class BscScreen extends Screen {
     private final Screen parent;
     private static final String DISCORD_URL = "https://discord.gg/bingo";
@@ -56,7 +56,7 @@ public class BscScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         context.fill(0, 0, this.width, this.height, 0xAA000000);
         context.fill(x, y, x + windowWidth, y + windowHeight, 0xFF121212);
         context.fill(x, y, x + SIDEBAR_WIDTH, y + windowHeight, 0xFF181818);
@@ -118,12 +118,12 @@ public class BscScreen extends Screen {
             int tx = (int) (((windowWidth - 190) / CONTENT_SCALE) - 22);
             float sliderWidth = 50f;
             float percent = (float) ((relMouseX - tx) / sliderWidth);
-            percent = Math.max(0, Math.min(1, percent));
+            percent = Math.clamp(percent, 0, 1);
             BscConfig.alertDuration = 1 + Math.round(percent * 9);
         }
     }
 
-    private void renderFooter(GuiGraphics context) {
+    private void renderFooter(GuiGraphicsExtractor context) {
         int footerY = y + windowHeight - 18;
         String discordText = "Discord";
         int iconSize = 10;
@@ -132,7 +132,7 @@ public class BscScreen extends Screen {
         int discordStartX = x + (SIDEBAR_WIDTH - totalDiscordWidth) / 2;
 
         context.blit(RenderPipelines.GUI_TEXTURED, DISCORD_ICON, discordStartX, footerY - 2, 0.0f, 0.0f, iconSize, iconSize, iconSize, iconSize);
-        context.drawString(this.font, "§9" + discordText, discordStartX + iconSize + gap, footerY - 1, 0xFFFFFFFF, true);
+        context.text(this.font, "§9" + discordText, discordStartX + iconSize + gap, footerY - 1, 0xFFFFFFFF, true);
 
         int startX = x + SIDEBAR_WIDTH + 15;
         int endX = x + windowWidth - 15;
@@ -151,7 +151,7 @@ public class BscScreen extends Screen {
             int textWidth = this.font.width(text);
             float progress = (float) i / (items.length - 1);
             int targetX = (int) (startX + (progress * (totalWidth - textWidth)));
-            context.drawString(this.font, text, targetX, footerY, 0xFFFFFFFF, true);
+            context.text(this.font, text, targetX, footerY, 0xFFFFFFFF, true);
         }
     }
 
@@ -217,7 +217,7 @@ public class BscScreen extends Screen {
         return prefix + String.format("%dd %dh %dm", d.toDays(), d.toHoursPart(), d.toMinutesPart());
     }
 
-    private void renderTabContent(GuiGraphics context, double relMouseX, double relMouseY) {
+    private void renderTabContent(GuiGraphicsExtractor context, double relMouseX, double relMouseY) {
         int currY = -(int) scrollAmount;
 
         if (currentTab == 0) {
@@ -253,7 +253,7 @@ public class BscScreen extends Screen {
             currY += (SPACING + 20);
             boolean hReset = relMouseX >= 0 && relMouseX <= 80 && relMouseY >= currY && relMouseY <= currY + 15;
             context.fill(0, currY, 80, currY + 15, hReset ? 0xFFFF5555 : 0xFF882222);
-            context.drawCenteredString(this.font, "Reset Defaults", 40, currY + 3, 0xFFFFFFFF);
+            context.centeredText(this.font, "Reset Defaults", 40, currY + 3, 0xFFFFFFFF);
         } else if (currentTab == 1) {
             drawSetting(context, "Show Screen Alerts", "Display a large title in the center of your screen.", 10, BscConfig.showTitle, relMouseX, relMouseY);
             drawSliderSetting(context, "Alert Duration", BscConfig.alertDuration, 40, relMouseX, relMouseY);
@@ -268,11 +268,11 @@ public class BscScreen extends Screen {
                 if (!role.category.equals(lastCat)) {
                     lastCat = role.category;
                     context.fill(0, currY + 10, (int) ((windowWidth - 160) / CONTENT_SCALE), currY + 11, 0xFF333333);
-                    context.drawString(this.font, "§6§l" + lastCat, 0, currY + 14, 0xFFFFAA00, true);
+                    context.text(this.font, "§6§l" + lastCat, 0, currY + 14, 0xFFFFAA00, true);
                     currY += 28;
                 }
                 drawBadge(context, role.name, role.color, currY);
-                context.drawString(this.font, "§8" + role.desc, 4, currY + 14, 0xFFAAAAAA, false);
+                context.text(this.font, "§8" + role.desc, 4, currY + 14, 0xFFAAAAAA, false);
                 currY += 32;
             }
         } else {
@@ -284,26 +284,26 @@ public class BscScreen extends Screen {
         }
     }
 
-    private void drawSubHeader(GuiGraphics context, String title, int yPos) {
-        context.drawString(this.font, "§6§l" + title, 0, yPos, 0xFFFFFFFF, true);
+    private void drawSubHeader(GuiGraphicsExtractor context, String title, int yPos) {
+        context.text(this.font, "§6§l" + title, 0, yPos, 0xFFFFFFFF, true);
         context.fill(0, yPos + 10, (int) ((windowWidth - 160) / CONTENT_SCALE), yPos + 11, 0xFF2A2A2A);
     }
 
-    private void drawSetting(GuiGraphics context, String title, String desc, int yPos, boolean enabled, double relMouseX, double relMouseY) {
+    private void drawSetting(GuiGraphicsExtractor context, String title, String desc, int yPos, boolean enabled, double relMouseX, double relMouseY) {
         int tx = (int) ((windowWidth - 190) / CONTENT_SCALE);
         if (isHovering(relMouseX, relMouseY, 0, yPos - 2, tx + 35, 20)) context.fill(-2, yPos - 2, tx + 35, yPos + 22, 0x22FFFFFF);
-        context.drawString(this.font, title, 0, yPos, 0xFFFFFFFF, true);
-        context.drawString(this.font, "§8" + desc, 0, yPos + 10, 0xFF888888, true);
+        context.text(this.font, title, 0, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, "§8" + desc, 0, yPos + 10, 0xFF888888, true);
         context.fill(tx, yPos + 2, tx + 28, yPos + 14, enabled ? 0xFF3574F0 : 0xFF444444);
         int kX = enabled ? tx + 16 : tx + 2;
         context.fill(kX, yPos + 4, kX + 10, yPos + 12, 0xFFFFFFFF);
     }
 
-    private void drawSliderSetting(GuiGraphics context, String label, long value, int yPos, double relX, double relY) {
+    private void drawSliderSetting(GuiGraphicsExtractor context, String label, long value, int yPos, double relX, double relY) {
         int tx = (int) (((windowWidth - 190) / CONTENT_SCALE) - 22);
         if (isHovering(relX, relY, 0, yPos - 2, tx + 55, 20)) context.fill(-2, yPos - 2, tx + 55, yPos + 22, 0x22FFFFFF);
-        context.drawString(this.font, label, 0, yPos, 0xFFFFFFFF, true);
-        context.drawString(this.font, "§8Duration: §e" + value + "s", 0, yPos + 10, 0xFF888888, true);
+        context.text(this.font, label, 0, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, "§8Duration: §e" + value + "s", 0, yPos + 10, 0xFF888888, true);
         int sliderWidth = 50;
         context.fill(tx, yPos + 6, tx + sliderWidth, yPos + 10, 0xFF444444);
         float progress = (value - 1) / 9f;
@@ -311,51 +311,51 @@ public class BscScreen extends Screen {
         context.fill(knobX - 2, yPos + 4, knobX + 2, yPos + 12, 0xFF3574F0);
     }
 
-    private void drawActionSetting(GuiGraphics context, int yPos, double relMouseX, double relMouseY) {
+    private void drawActionSetting(GuiGraphicsExtractor context, int yPos, double relMouseX, double relMouseY) {
         int tx = (int) ((windowWidth - 190) / CONTENT_SCALE);
         if (isHovering(relMouseX, relMouseY, 0, yPos - 2, tx + 35, 20)) context.fill(-2, yPos - 2, tx + 35, yPos + 22, 0x22FFFFFF);
-        context.drawString(this.font, "Edit HUD Position", 0, yPos, 0xFFFFFFFF, true);
-        context.drawString(this.font, "§8Click to drag and move/resize HUD.", 0, yPos + 10, 0xFF888888, true);
+        context.text(this.font, "Edit HUD Position", 0, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, "§8Click to drag and move/resize HUD.", 0, yPos + 10, 0xFF888888, true);
         context.fill(tx - 10, yPos + 2, tx + 28, yPos + 14, 0xFF5555FF);
-        context.drawCenteredString(this.font, "EDIT", tx + 9, yPos + 4, 0xFFFFFFFF);
+        context.centeredText(this.font, "EDIT", tx + 9, yPos + 4, 0xFFFFFFFF);
     }
 
-    private void drawKeybindSetting(GuiGraphics context, String key, int yPos, double relX, double relY) {
+    private void drawKeybindSetting(GuiGraphicsExtractor context, String key, int yPos, double relX, double relY) {
         int tx = (int) ((windowWidth - 190) / CONTENT_SCALE);
         if (isHovering(relX, relY, 0, yPos - 2, tx + 35, 20)) context.fill(-2, yPos - 2, tx + 35, yPos + 22, 0x22FFFFFF);
-        context.drawString(this.font, "Menu Keybind", 0, yPos, 0xFFFFFFFF, true);
-        context.drawString(this.font, "§8Key to open this menu.", 0, yPos + 10, 0xFF888888, true);
+        context.text(this.font, "Menu Keybind", 0, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, "§8Key to open this menu.", 0, yPos + 10, 0xFF888888, true);
         context.fill(tx - 20, yPos + 2, tx + 28, yPos + 14, 0xFF2A2A2A);
-        context.drawCenteredString(this.font, key, tx + 4, yPos + 4, 0xFFFFFFFF);
+        context.centeredText(this.font, key, tx + 4, yPos + 4, 0xFFFFFFFF);
     }
 
-    private void drawColorSetting(GuiGraphics context, String label, int color, int yPos, double relX, double relY) {
+    private void drawColorSetting(GuiGraphicsExtractor context, String label, int color, int yPos, double relX, double relY) {
         int tx = (int) ((windowWidth - 190) / CONTENT_SCALE);
         if (isHovering(relX, relY, 0, yPos - 2, tx + 35, 20)) context.fill(-2, yPos - 2, tx + 35, yPos + 22, 0x22FFFFFF);
-        context.drawString(this.font, label, 0, yPos, 0xFFFFFFFF, true);
-        context.drawString(this.font, "§8Click the box to cycle color.", 0, yPos + 10, 0xFF888888, true);
+        context.text(this.font, label, 0, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, "§8Click the box to cycle color.", 0, yPos + 10, 0xFF888888, true);
         context.fill(tx, yPos + 2, tx + 28, yPos + 14, 0xFFFFFFFF);
         context.fill(tx + 2, yPos + 4, tx + 26, yPos + 12, 0xFF000000 | color);
     }
 
-    private void drawBadge(GuiGraphics context, String text, int color, int yPos) {
+    private void drawBadge(GuiGraphicsExtractor context, String text, int color, int yPos) {
         int tw = this.font.width(text);
         context.fill(0, yPos, tw + 12, yPos + 12, 0x33000000);
         context.fill(0, yPos, 2, yPos + 12, 0xFF000000 | color);
-        context.drawString(this.font, text, 6, yPos + 2, 0xFF000000 | color, false);
+        context.text(this.font, text, 6, yPos + 2, 0xFF000000 | color, false);
     }
 
-    private void drawTab(GuiGraphics context, String name, int yPos, boolean sel) {
+    private void drawTab(GuiGraphicsExtractor context, String name, int yPos, boolean sel) {
         if (sel) context.fill(x + 5, yPos - 5, x + 115, yPos + 12, 0x445555FF);
-        context.drawString(this.font, (sel ? "§f" : "§7") + name, x + 15, yPos, 0xFFFFFFFF, true);
+        context.text(this.font, (sel ? "§f" : "§7") + name, x + 15, yPos, 0xFFFFFFFF, true);
     }
 
-    private void drawSectionHeader(GuiGraphics context, String title) {
-        context.drawString(this.font, "§b" + title, 0, 0, 0xFFFFFFFF, true);
+    private void drawSectionHeader(GuiGraphicsExtractor context, String title) {
+        context.text(this.font, "§b" + title, 0, 0, 0xFFFFFFFF, true);
         context.fill(0, 12, (int) ((windowWidth - 160) / CONTENT_SCALE), 13, 0xFF2A2A2A);
     }
 
-    private void renderScrollbar(GuiGraphics context, int mx, int my) {
+    private void renderScrollbar(GuiGraphicsExtractor context, int mx, int my) {
         float max = getMaxScroll();
         if (max <= 0) return;
         int tH = windowHeight - 80;
@@ -408,7 +408,7 @@ public class BscScreen extends Screen {
     private boolean isHovering(double mx, double my, double x, double y, double w, double h) { return mx >= x && mx <= x + w && my >= y && my <= y + h; }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent event) {
         this.isDraggingScrollbar = false;
         if (this.isDraggingSlider) {
             this.isDraggingSlider = false;
@@ -419,7 +419,7 @@ public class BscScreen extends Screen {
 
     @Override public boolean mouseScrolled(double mx, double my, double h, double v) { scrollAmount = Math.max(0, Math.min(getMaxScroll(), scrollAmount - (float) (v * 20))); return true; }
 
-    @Override public boolean keyPressed(KeyEvent keyEvent) {
+    @Override public boolean keyPressed(@NonNull KeyEvent keyEvent) {
         if (waitingForKey) {
             if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) BingoSplashCommunity.updateKeybind(null);
             else BingoSplashCommunity.updateKeybind(keyEvent.key());
@@ -430,7 +430,7 @@ public class BscScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent mouseButtonEvent, boolean bl) {
         if (waitingForKey) return false;
         int sX = x + windowWidth - SCROLLBAR_WIDTH - SCROLLBAR_MARGIN;
         if (mouseButtonEvent.x() >= sX && mouseButtonEvent.x() <= sX + SCROLLBAR_WIDTH && mouseButtonEvent.y() >= y + 50) { this.isDraggingScrollbar = true; return true; }
