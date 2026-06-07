@@ -58,6 +58,7 @@ java {
 
 jar {
 	inputs.property "archivesName", project.base.archivesName
+	archiveClassifier = project.minecraft_version
 
 	from("LICENSE") {
 		rename { "${it}_${inputs.properties.archivesName}"}
