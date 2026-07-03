@@ -1,5 +1,7 @@
 package com.bscmod;
 
+import com.bscmod.compat.PromptOverlayCompat;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
@@ -240,12 +242,18 @@ public class NetworkHandler extends Thread {
             if (pingType.equalsIgnoreCase("SPLASH")) {
                 // Check if the ping includes a party join request
                 if (msgLower.contains("/p join")) {
+                    String command = "p join " + senderName;
+
                     mainMsg.append(Component.literal(" §d§l[JOIN]").withStyle(style ->
-                            style.withClickEvent(new ClickEvent.RunCommand("/p join " + senderName))
+                            style.withClickEvent(new ClickEvent.RunCommand("/" + command))
                                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to join §e" + senderName + "§7's party")))
                                     .withColor(ChatFormatting.LIGHT_PURPLE)
                                     .withBold(true)
                     ));
+
+                    if (FabricLoader.getInstance().isModLoaded("prompt-overlay")) {
+                        PromptOverlayCompat.sendSplashPartyOverlay(senderName, command);
+                    }
                 }
                 // Otherwise, show the WARP button if there's no p join was detected
                 else if (BscConfig.showHubWarp && !finalLobby.isEmpty()) {

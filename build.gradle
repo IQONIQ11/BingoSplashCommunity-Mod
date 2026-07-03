@@ -15,6 +15,14 @@ base {
 
 repositories {
 	maven { url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1" }
+
+	maven {
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+		content {
+			includeGroup("maven.modrinth")
+		}
+	}
 }
 
 dependencies {
@@ -25,6 +33,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+
+	implementation "maven.modrinth:prompt-overlay:mc26.1.2-0.2.0"
 
 	runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
 }
