@@ -1,7 +1,7 @@
 package com.bscmod;
 
-import com.bscmod.compat.PromptOverlayCompat;
-import net.fabricmc.loader.api.FabricLoader;
+import com.bscmod.overlays.SplashPartyOverlay;
+import net.dungeonhub.promptoverlay.PromptOverlayApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
@@ -251,18 +251,20 @@ public class NetworkHandler extends Thread {
                                     .withBold(true)
                     ));
 
-                    if (FabricLoader.getInstance().isModLoaded("prompt-overlay")) {
-                        PromptOverlayCompat.sendSplashPartyOverlay(senderName, command);
-                    }
+                    PromptOverlayApi.setOverlay(new SplashPartyOverlay(senderName, command));
                 }
                 // Otherwise, show the WARP button if there's no p join was detected
                 else if (BscConfig.showHubWarp && !finalLobby.isEmpty()) {
+                    String command = "warp hub";
+
                     mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
-                            style.withClickEvent(new ClickEvent.RunCommand("/hub"))
+                            style.withClickEvent(new ClickEvent.RunCommand("/" + command))
                                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to warp to Hub")))
                                     .withColor(ChatFormatting.GOLD)
                                     .withBold(true)
                     ));
+
+                    PromptOverlayApi.setOverlay(new SplashPartyOverlay(senderName, command));
                 }
             }
 
