@@ -4,6 +4,7 @@ import net.dungeonhub.promptoverlay.api.render.AcceptableOverlay;
 import net.dungeonhub.promptoverlay.api.render.OneActionOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
@@ -38,7 +39,7 @@ public class SplashPartyOverlay implements AcceptableOverlay, OneActionOverlay {
     }
 
     @Override
-    public @NonNull String getMessage() {
-        return sender + " invited you to a splash.";
+    public @NonNull Component getMessage() {
+        return Component.literal(sender + " invited you to a splash.");
     }
 }
