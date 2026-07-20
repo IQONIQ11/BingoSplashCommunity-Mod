@@ -1,10 +1,11 @@
 package com.bscmod;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 public class BscHudEditScreen extends Screen {
@@ -25,10 +26,10 @@ public class BscHudEditScreen extends Screen {
     public boolean isPauseScreen() { return false; }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // --- Header Title ---
         String headerTitle = "§b§lHUD EDITOR MODE";
-        context.drawString(this.font, headerTitle, this.width / 2, 10, 0xFFFFFFFF);
+        context.text(this.font, headerTitle, this.width / 2, 10, 0xFFFFFFFF);
         context.fill((this.width + (font.width(headerTitle))) / 2 - 40, 20, (this.width + (font.width(headerTitle))) / 2 + 40, 21, 0xFF55FFFF);
 
         // --- Render HUD 1: Bingo Card ---
@@ -53,12 +54,12 @@ public class BscHudEditScreen extends Screen {
         }
 
         // Footer Instructions
-        context.drawCenteredString(this.font, "§7Click elements to move §8| §7Drag corners to scale", this.width / 2, this.height - 15, 0xAAAAAA);
+        context.centeredText(this.font, "§7Click elements to move §8| §7Drag corners to scale", this.width / 2, this.height - 15, 0xAAAAAA);
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
     }
 
-    private void renderEditorElement(GuiGraphics context, String label, int x, int y, int baseW, int baseH, float scale, boolean isDragging, boolean isResizing, boolean renderScale) {
+    private void renderEditorElement(GuiGraphicsExtractor context, String label, int x, int y, int baseW, int baseH, float scale, boolean isDragging, boolean isResizing, boolean renderScale) {
         int sw;
         int sh;
 
@@ -72,7 +73,7 @@ public class BscHudEditScreen extends Screen {
 
         // Guide Box & Border
         context.fill(x - 2, y - 2, x + sw + 2, y + sh + 2, (isDragging || isResizing) ? 0x4455FFFF : 0x22FFFFFF);
-        context.renderOutline(x - 3, y - 3, sw + 6, sh + 6, 0xFF55FFFF);
+        context.outline(x - 3, y - 3, sw + 6, sh + 6, 0xFF55FFFF);
 
         // Resize Handle
         int handleColor = isResizing ? 0xFFFFFF00 : 0xFFFFFFFF;
@@ -80,12 +81,12 @@ public class BscHudEditScreen extends Screen {
 
         // Status Label
         if (isDragging || isResizing) {
-            context.drawString(this.font, "§e" + label + String.format(" (%.1fx)", scale), x, y - 12, 0xFFFFFFFF);
+            context.text(this.font, "§e" + label + String.format(" (%.1fx)", scale), x, y - 12, 0xFFFFFFFF);
         }
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent mouseButtonEvent, boolean bl) {
         // Check Timer First (since it's usually smaller)
         if (BscConfig.displayBingoTimer && checkInput(mouseButtonEvent.x(), mouseButtonEvent.y(), BscConfig.timerHudX, BscConfig.timerHudY, 125, 10, BscConfig.timerHudScale, "timer")) return true;
 
@@ -134,7 +135,7 @@ public class BscHudEditScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double deltaX, double deltaY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent mouseButtonEvent, double deltaX, double deltaY) {
         if (resizingBingo) {
             BscConfig.bingoHudScale = Math.clamp((float) ((mouseButtonEvent.x() - BscConfig.bingoHudX) / 130.0), 0.5f, 3.0f);
         } else if (resizingTimer) {
@@ -158,7 +159,7 @@ public class BscHudEditScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent mouseButtonEvent) {
         draggingBingo = resizingBingo = draggingTimer = resizingTimer = draggingGuide = resizingGuide = false;
         BscConfig.save();
         return super.mouseReleased(mouseButtonEvent);
@@ -167,13 +168,9 @@ public class BscHudEditScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
         if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) {
-            if (this.minecraft != null) this.minecraft.setScreen(parent);
+            this.minecraft.setScreen(parent);
             return true;
         }
         return super.keyPressed(keyEvent);
-    }
-
-    @Override
-    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
     }
 }

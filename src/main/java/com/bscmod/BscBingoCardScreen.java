@@ -1,6 +1,6 @@
 package com.bscmod;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
@@ -24,14 +24,14 @@ public class BscBingoCardScreen extends Screen {
         return (index == 0 || index == 6 || index == 12 || index == 18 || index == 24);
     }
 
-    private void drawBorder(GuiGraphics guiGraphics, int x, int y, int width, int height, int color) {
+    private void drawBorder(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int color) {
         guiGraphics.fill(x, y, x + width, y + 1, color);
         guiGraphics.fill(x, y + height - 1, x + width, y + height, color);
         guiGraphics.fill(x, y, x + 1, y + height, color);
         guiGraphics.fill(x + width - 1, y, x + width, y + height, color);
     }
 
-    private void renderCustomTooltip(GuiGraphics guiGraphics, List<FormattedCharSequence> lines, int mouseX, int mouseY) {
+    private void renderCustomTooltip(GuiGraphicsExtractor guiGraphics, List<FormattedCharSequence> lines, int mouseX, int mouseY) {
         if (lines.isEmpty()) return;
         int width = 0;
         for (FormattedCharSequence line : lines) {
@@ -42,20 +42,20 @@ public class BscBingoCardScreen extends Screen {
         int y = mouseY - 12;
         int height = 8 + (lines.size() > 1 ? (lines.size() - 1) * 10 : 0);
         if (x + width > this.width) x -= 28 + width;
-        if (y + height > this.height) y = Math.max(4, Math.min(this.height - height - 4, y));
+        if (y + height > this.height) y = Math.clamp(y, 4, this.height - height - 4);
 
         guiGraphics.fill(x - 3, y - 4, x + width + 3, y + height + 4, 0xF0100010);
         drawBorder(guiGraphics, x - 3, y - 4, width + 6, height + 8, 0x505000FF);
 
         int textY = y;
         for (FormattedCharSequence line : lines) {
-            guiGraphics.drawString(this.font, line, x, textY, -1, true);
+            guiGraphics.text(this.font, line, x, textY, -1, true);
             textY += 10;
         }
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         guiGraphics.fill(0, 0, this.width, this.height, 0x90000000);
 
         int slotSize = 54;
@@ -75,7 +75,7 @@ public class BscBingoCardScreen extends Screen {
         int headerX = (this.width - headerWidth) / 2;
         int headerY = boxTop + 16;
 
-        guiGraphics.drawString(this.font, headerText, headerX, headerY, 0xFFFFFFFF, true);
+        guiGraphics.text(this.font, headerText, headerX, headerY, 0xFFFFFFFF, true);
 
         List<FormattedCharSequence> activeTooltipLines = null;
 
@@ -114,13 +114,13 @@ public class BscBingoCardScreen extends Screen {
             List<FormattedCharSequence> nameLines = this.font.split(Component.literal(name).withStyle(ChatFormatting.WHITE), slotSize - 6);
             int textY = y + (slotSize / 2) - (nameLines.size() * 4);
             for (FormattedCharSequence line : nameLines) {
-                guiGraphics.drawCenteredString(this.font, line, x + (slotSize / 2), textY, 0xFFFFFFFF);
+                guiGraphics.centeredText(this.font, line, x + (slotSize / 2), textY, 0xFFFFFFFF);
                 textY += 9;
             }
         }
 
         if (activeTooltipLines != null) renderCustomTooltip(guiGraphics, activeTooltipLines, mouseX, mouseY);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override

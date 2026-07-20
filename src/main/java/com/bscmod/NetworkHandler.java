@@ -8,6 +8,8 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundEvents;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,6 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetworkHandler extends Thread {
+    private static final Logger logger = LoggerFactory.getLogger(NetworkHandler.class);
+
     private static final String WSS_URL = System.getenv().getOrDefault("BSC_BACKEND_URL", "wss://api.bscmod.com/");
     private static final int MAX_HEARTBEAT_LOGS = 25;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -72,11 +76,11 @@ public class NetworkHandler extends Thread {
         client = HttpClient.newHttpClient();
         CompletableFuture<WebSocket> wsFuture = client.newWebSocketBuilder()
                 .buildAsync(URI.create(WSS_URL), new WebSocketListener());
-        wsFuture.whenCompleteAsync((ws, ex) -> {
+        wsFuture.whenCompleteAsync((ws, exception) -> {
             connecting.set(false);
-            if (ex != null) {
-                System.err.println("[BSC] Connection Error: " + ex.getMessage());
-                ex.printStackTrace();
+            if (exception != null) {
+                System.err.println("[BSC] Connection Error: " + exception.getMessage());
+                logger.error("WebSocket connection failed: {}", exception.getMessage(), exception);
                 scheduleReconnect();
             } else {
                 webSocketClient = ws;
@@ -178,11 +182,9 @@ public class NetworkHandler extends Thread {
 
         if (type.equals("ERROR")) {
             String error = allParts[1];
-            Minecraft.getInstance().execute(() -> {
-                if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.displayClientMessage(Component.literal("§c[BSC] " + error), false);
-                }
-            });
+            Minecraft.getInstance().execute(() ->
+                    Minecraft.getInstance().getChatListener().handleSystemMessage(Component.literal("§c[BSC] " + error), false)
+            );
             return;
         }
         if (!BscConfig.receivePings || allParts.length < 3 || allParts.length > 4) return;
@@ -256,7 +258,7 @@ public class NetworkHandler extends Thread {
                 }
             }
 
-            client.player.displayClientMessage(mainMsg, false);
+            client.getChatListener().handleSystemMessage(mainMsg, false);
 
             if (BscConfig.showTitle) {
                 Component titleText;

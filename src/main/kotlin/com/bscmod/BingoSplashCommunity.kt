@@ -4,11 +4,11 @@ import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
@@ -21,7 +21,7 @@ class BingoSplashCommunity : ClientModInitializer {
         BingoRolesRenderer.fetchLatestRoles()
         HowToBingoDisplay.register()
 
-        settingsKey = KeyBindingHelper.registerKeyBinding(
+        settingsKey = KeyMappingHelper.registerKeyMapping(
             KeyMapping(
                 "key.bsc.settings",
                 InputConstants.Type.KEYSYM,
@@ -32,7 +32,7 @@ class BingoSplashCommunity : ClientModInitializer {
 
         ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher, _ ->
             dispatcher.register(
-                ClientCommandManager.literal("bsc")
+                ClientCommands.literal("bsc")
                     .executes { _: CommandContext<FabricClientCommandSource> ->
                         scrollQueueOpen = true
                         1
@@ -40,9 +40,9 @@ class BingoSplashCommunity : ClientModInitializer {
             )
 
             dispatcher.register(
-                ClientCommandManager.literal("bingocard")
+                ClientCommands.literal("bingocard")
                     .then(
-                        ClientCommandManager.argument("player", StringArgumentType.word())
+                        ClientCommands.argument("player", StringArgumentType.word())
                             .executes { context: CommandContext<FabricClientCommandSource> ->
                                 val target = StringArgumentType.getString(context, "player")
                                 networkHandler.sendMessage("REQUEST_CARD|$target")

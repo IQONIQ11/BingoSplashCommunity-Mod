@@ -1,13 +1,14 @@
 package com.bscmod;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.Slot;
@@ -35,7 +36,7 @@ public class BscBingoHud {
     public static void register() {
         fetchGoals();
 
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+        ClientReceiveMessageEvents.GAME.register((message, _) -> {
             String text = message.getString();
             onChatMessage(text);
         });
@@ -46,7 +47,7 @@ public class BscBingoHud {
             }
         });
 
-        HudRenderCallback.EVENT.register((context, delta) -> {
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("bingosplashcommunity", "bingo_card_timer"), (context, _) -> {
             Minecraft client = Minecraft.getInstance();
             if (client.player == null || client.options.hideGui) return;
             if (client.screen instanceof BscScreen || client.screen instanceof BscHudEditScreen) return;
@@ -207,7 +208,7 @@ public class BscBingoHud {
         }
     }
 
-    public static void renderCard(GuiGraphics context, Font textRenderer) {
+    public static void renderCard(GuiGraphicsExtractor context, Font textRenderer) {
         context.pose().pushMatrix();
         context.pose().translateLocal(BscConfig.bingoHudX, BscConfig.bingoHudY);
         float scale = BscConfig.bingoHudScale;
@@ -215,12 +216,12 @@ public class BscBingoHud {
 
         synchronized (goals) {
             if (goals.isEmpty()) {
-                if (!isLoading) context.drawString(textRenderer, "§aAll Goals Done!", 0, 0, BscConfig.cardTitleColor, true);
+                if (!isLoading) context.text(textRenderer, "§aAll Goals Done!", 0, 0, BscConfig.cardTitleColor, true);
             } else {
-                context.drawString(textRenderer, "Bingo Goals:", 0, 0, BscConfig.cardTitleColor, true);
+                context.text(textRenderer, "Bingo Goals:", 0, 0, BscConfig.cardTitleColor, true);
                 int offset = 12;
                 for (BingoGoal goal : goals) {
-                    context.drawString(textRenderer, "§7- §f" + goal.description(), 4, offset, BscConfig.cardTextColor, true);
+                    context.text(textRenderer, "§7- §f" + goal.description(), 4, offset, BscConfig.cardTextColor, true);
                     offset += 10;
                 }
             }
@@ -228,15 +229,15 @@ public class BscBingoHud {
         context.pose().popMatrix();
     }
 
-    public static void renderTimer(GuiGraphics context, Font textRenderer) {
+    public static void renderTimer(GuiGraphicsExtractor context, Font textRenderer) {
         context.pose().pushMatrix();
         context.pose().translateLocal(BscConfig.timerHudX, BscConfig.timerHudY);
         float scale = BscConfig.timerHudScale;
         context.pose().scale(scale, scale);
         String label = getBingoTimerLabel();
         String time = getBingoTimerValue();
-        context.drawString(textRenderer, label, 0, 0, BscConfig.timerTitleColor, true);
-        context.drawString(textRenderer, time, textRenderer.width(label), 0, BscConfig.timerTextColor, true);
+        context.text(textRenderer, label, 0, 0, BscConfig.timerTitleColor, true);
+        context.text(textRenderer, time, textRenderer.width(label), 0, BscConfig.timerTextColor, true);
         context.pose().popMatrix();
     }
 

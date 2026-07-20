@@ -3,7 +3,7 @@ package com.bscmod.mixin;
 import com.bscmod.HowToBingoDisplay;
 import com.bscmod.NetworkHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -17,8 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin {
-    @Inject(method = "renderSlot", at = @At("TAIL"))
-    private void renderSlot(GuiGraphics guiGraphics, Slot slot, int i, int j, CallbackInfo ci) {
+    // TODO use the InventoryUtils class instead maybe
+    @Inject(method = "extractSlot", at = @At("TAIL"))
+    private void extractSlot(GuiGraphicsExtractor guiGraphics, Slot slot, int i, int j, CallbackInfo ci) {
         // 1. Valid Check
         if (NetworkHandler.activeLobby == null || NetworkHandler.activeLobby.isEmpty()) return;
 
@@ -42,8 +43,8 @@ public abstract class AbstractContainerScreenMixin {
         }
     }
 
-    @Inject(method = "renderContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
-    private void onInventoryRender(GuiGraphics context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
+    @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
+    private void onInventoryRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
         if (Minecraft.getInstance().level != null && Minecraft.getInstance().player != null) {
             Screen currentScreen = Minecraft.getInstance().screen;
             if(currentScreen == null) return;

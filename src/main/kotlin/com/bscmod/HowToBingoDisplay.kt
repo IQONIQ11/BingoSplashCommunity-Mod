@@ -3,14 +3,14 @@ package com.bscmod
 import kotlinx.atomicfu.locks.synchronized
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.Game
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.minecraft.ChatFormatting
-import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 import java.net.URI
@@ -31,10 +31,10 @@ object HowToBingoDisplay {
             onChatMessage(message.string)
         })
 
-        HudRenderCallback.EVENT.register(HudRenderCallback { context: GuiGraphics, _: DeltaTracker ->
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("bingosplashcommunity", "bingo_guide")) { context, _ ->
             val client = Minecraft.getInstance()
-            if (client.player == null || client.options.hideGui) return@HudRenderCallback
-            if (client.screen is BscScreen || client.screen is BscHudEditScreen) return@HudRenderCallback
+            if (client.player == null || client.options.hideGui) return@addLast
+            if (client.screen is BscScreen || client.screen is BscHudEditScreen) return@addLast
 
             val currentProfile = HypixelUtils.getProfileType()
             val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
@@ -42,10 +42,10 @@ object HowToBingoDisplay {
             if (isBingoProfile && BscConfig.displayBingoGuide) { // TODO find a way to debug the guide feature
                 renderGuide(context, client.font)
             }
-        })
+        }
     }
 
-    fun handleGuideOverview(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+    fun handleGuideOverview(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         val currentProfile = HypixelUtils.getProfileType()
         val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)
 
@@ -66,7 +66,7 @@ object HowToBingoDisplay {
         context.pose().translateLocal(10.toFloat(), guideDisplayHeight.toFloat())
 
         val firstElementY = -(totalGuideDisplayHeight / 2)
-        context.drawString(font, "Available Bingo Guides:", 0, firstElementY, 0xFFFFFFFF.toInt(), true)
+        context.text(font, "Available Bingo Guides:", 0, firstElementY, 0xFFFFFFFF.toInt(), true)
 
         var hoveredGuide: String? = null
 
@@ -81,7 +81,7 @@ object HowToBingoDisplay {
 
             val elementY = (index + 1) * guideElementHeight - (totalGuideDisplayHeight / 2)
 
-            context.drawString(font, text, 0, elementY, 0xFFFFFFFF.toInt(), true)
+            context.text(font, text, 0, elementY, 0xFFFFFFFF.toInt(), true)
 
             val listStartOnScreen = guideDisplayHeight - (totalGuideDisplayHeight / 2)
 
@@ -108,7 +108,7 @@ object HowToBingoDisplay {
         }
     }
 
-    fun renderGuide(context: GuiGraphics, textRenderer: Font) {
+    fun renderGuide(context: GuiGraphicsExtractor, textRenderer: Font) {
         val x = BscConfig.bingoGuideX
         val y = BscConfig.bingoGuideY
         val width = BscConfig.bingoGuideWidth
@@ -138,7 +138,7 @@ object HowToBingoDisplay {
             val totalHeight = wrappedText.size * (textRenderer.lineHeight + 2) + 2
 
             context.fill(x - 2, y - 2, x + width, y + totalHeight, bgColor)
-            context.renderOutline(
+            context.outline(
                 x - 2,
                 y - 2,
                 width + 2,
@@ -151,7 +151,7 @@ object HowToBingoDisplay {
 
             for ((index, line) in wrappedText.withIndex()) {
                 val yOffset = (index * lineHeight).coerceAtMost(maxHeight - lineHeight)
-                context.drawString(textRenderer, line.trim(), x + 2, y + 2 + yOffset, BscConfig.bingoGuideColor, true)
+                context.text(textRenderer, line.trim(), x + 2, y + 2 + yOffset, BscConfig.bingoGuideColor, true)
             }
         }
 
@@ -191,7 +191,7 @@ object HowToBingoDisplay {
 
         // Split the full text into wrapped lines at word boundaries
         val wrappedLines = mutableListOf<String>()
-        var remainingWords = fullText.trimEnd().split(" ").filter { it.isNotEmpty() }
+        val remainingWords = fullText.trimEnd().split(" ").filter { it.isNotEmpty() }
 
         if (remainingWords.isEmpty()) return listOf()
 
