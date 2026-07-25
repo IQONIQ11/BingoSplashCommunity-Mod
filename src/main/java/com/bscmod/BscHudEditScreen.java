@@ -168,7 +168,7 @@ public class BscHudEditScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
         if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) {
-            this.minecraft.setScreen(parent);
+            this.minecraft.setScreenAndShow(parent);
             return true;
         }
         return super.keyPressed(keyEvent);

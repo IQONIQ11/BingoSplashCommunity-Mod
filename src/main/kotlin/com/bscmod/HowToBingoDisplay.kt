@@ -33,8 +33,8 @@ object HowToBingoDisplay {
 
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("bingosplashcommunity", "bingo_guide")) { context, _ ->
             val client = Minecraft.getInstance()
-            if (client.player == null || client.options.hideGui) return@addLast
-            if (client.screen is BscScreen || client.screen is BscHudEditScreen) return@addLast
+            if (client.player == null || client.gui.hud.isHidden) return@addLast
+            if (client.gui.screen() is BscScreen || client.gui.screen() is BscHudEditScreen) return@addLast
 
             val currentProfile = HypixelUtils.getProfileType()
             val isBingoProfile = currentProfile.equals("Bingo", ignoreCase = true)

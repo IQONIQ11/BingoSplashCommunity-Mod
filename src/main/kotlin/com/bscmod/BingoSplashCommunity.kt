@@ -58,12 +58,12 @@ class BingoSplashCommunity : ClientModInitializer {
 
             if (client!!.player == null) return@EndTick
             if (scrollQueueOpen) {
-                client.setScreen(BscScreen(null))
+                client.setScreenAndShow(BscScreen(null))
                 scrollQueueOpen = false
             }
             if (settingsKey != null) {
                 while (settingsKey!!.consumeClick()) {
-                    client.setScreen(BscScreen(client.screen))
+                    client.setScreenAndShow(BscScreen(client.gui.screen()))
                 }
             }
         })

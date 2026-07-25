@@ -49,8 +49,8 @@ public class BscBingoHud {
 
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("bingosplashcommunity", "bingo_card_timer"), (context, _) -> {
             Minecraft client = Minecraft.getInstance();
-            if (client.player == null || client.options.hideGui) return;
-            if (client.screen instanceof BscScreen || client.screen instanceof BscHudEditScreen) return;
+            if (client.player == null || client.gui.hud.isHidden()) return;
+            if (client.gui.screen() instanceof BscScreen || client.gui.screen() instanceof BscHudEditScreen) return;
 
             String currentProfile = HypixelUtils.getProfileType();
             boolean isBingoProfile = currentProfile.equalsIgnoreCase("Bingo");
@@ -72,7 +72,7 @@ public class BscBingoHud {
 
         if (!(client.player.containerMenu instanceof ChestMenu chestMenu)) return;
 
-        String title = client.screen != null ? client.screen.getTitle().getString() : "";
+        String title = client.gui.screen() != null ? client.gui.screen().getTitle().getString() : "";
         if (!title.contains("Bingo Card")) return;
 
         List<BingoGoal> toRemove = new ArrayList<>();

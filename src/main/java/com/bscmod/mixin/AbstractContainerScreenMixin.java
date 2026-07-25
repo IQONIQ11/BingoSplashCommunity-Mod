@@ -46,7 +46,7 @@ public abstract class AbstractContainerScreenMixin {
     @Inject(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
     private void onInventoryRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
         if (Minecraft.getInstance().level != null && Minecraft.getInstance().player != null) {
-            Screen currentScreen = Minecraft.getInstance().screen;
+            Screen currentScreen = Minecraft.getInstance().gui.screen();
             if(currentScreen == null) return;
 
             if (!(currentScreen instanceof InventoryScreen)) return;
@@ -58,7 +58,7 @@ public abstract class AbstractContainerScreenMixin {
     @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z", shift = At.Shift.AFTER))
     private void onInventoryMouseClick(MouseButtonEvent mouseButtonEvent, boolean bl, CallbackInfoReturnable<Boolean> ci) {
         if (Minecraft.getInstance().level != null && Minecraft.getInstance().player != null) {
-            Screen currentScreen = Minecraft.getInstance().screen;
+            Screen currentScreen = Minecraft.getInstance().gui.screen();
             if(currentScreen == null) return;
 
             if (!(currentScreen instanceof InventoryScreen)) return;
