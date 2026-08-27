@@ -1,5 +1,7 @@
 package com.bscmod;
 
+import com.bscmod.overlays.SplashPartyOverlay;
+import net.dungeonhub.promptoverlay.PromptOverlayApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
@@ -240,21 +242,29 @@ public class NetworkHandler extends Thread {
             if (pingType.equalsIgnoreCase("SPLASH")) {
                 // Check if the ping includes a party join request
                 if (msgLower.contains("/p join")) {
+                    String command = "p join " + senderName;
+
                     mainMsg.append(Component.literal(" §d§l[JOIN]").withStyle(style ->
-                            style.withClickEvent(new ClickEvent.RunCommand("/p join " + senderName))
+                            style.withClickEvent(new ClickEvent.RunCommand("/" + command))
                                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to join §e" + senderName + "§7's party")))
                                     .withColor(ChatFormatting.LIGHT_PURPLE)
                                     .withBold(true)
                     ));
+
+                    PromptOverlayApi.setOverlay(new SplashPartyOverlay(senderName, command));
                 }
                 // Otherwise, show the WARP button if there's no p join was detected
                 else if (BscConfig.showHubWarp && !finalLobby.isEmpty()) {
+                    String command = "warp hub";
+
                     mainMsg.append(Component.literal(" §6§l[WARP]").withStyle(style ->
-                            style.withClickEvent(new ClickEvent.RunCommand("/hub"))
+                            style.withClickEvent(new ClickEvent.RunCommand("/" + command))
                                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("§7Click to warp to Hub")))
                                     .withColor(ChatFormatting.GOLD)
                                     .withBold(true)
                     ));
+
+                    PromptOverlayApi.setOverlay(new SplashPartyOverlay(senderName, command));
                 }
             }
 
