@@ -57,7 +57,7 @@ public class NetworkHandler extends Thread {
         connect();
         while (running) {
             try {
-                Thread.sleep(10000);
+                Thread.sleep(2000);
                 Instant now = Instant.now();
                 if (!connecting.get() && !reconnecting.get() && lastKeepalive.plus(Duration.ofSeconds(120)).isBefore(now)) {
                     System.out.println("[BSC] No KEEPALIVE was received for 2 minutes, reconnecting...");
