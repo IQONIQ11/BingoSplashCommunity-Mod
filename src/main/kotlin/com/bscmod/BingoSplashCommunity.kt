@@ -31,7 +31,7 @@ class BingoSplashCommunity : ClientModInitializer {
             )
         )
 
-        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback { dispatcher, _ ->
+        ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(
                 ClientCommands.literal("bsc")
                     .executes { _: CommandContext<FabricClientCommandSource> ->
@@ -52,12 +52,12 @@ class BingoSplashCommunity : ClientModInitializer {
                             }
                     )
             )
-        })
+        }
 
-        ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client: Minecraft? ->
+        ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client: Minecraft ->
             UpdateChecker.tick()
 
-            if (client!!.player == null) return@EndTick
+            if (client.player == null) return@EndTick
             if (scrollQueueOpen) {
                 client.setScreen(BscScreen(null))
                 scrollQueueOpen = false
@@ -69,10 +69,9 @@ class BingoSplashCommunity : ClientModInitializer {
             }
         })
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register(ClientLifecycleEvents.ClientStopping { client: Minecraft? ->
+        ClientLifecycleEvents.CLIENT_STOPPING.register {
             networkHandler.stopListener()
-
-        })
+        }
 
         networkHandler = NetworkHandler()
         networkHandler.start()
