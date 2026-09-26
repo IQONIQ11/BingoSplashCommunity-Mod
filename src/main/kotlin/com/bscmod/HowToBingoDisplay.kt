@@ -1,5 +1,6 @@
 package com.bscmod
 
+import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.atomicfu.locks.synchronized
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.Game
@@ -12,7 +13,6 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
-import org.lwjgl.glfw.GLFW
 import java.net.URI
 
 object HowToBingoDisplay {
@@ -101,9 +101,9 @@ object HowToBingoDisplay {
     fun handleGuideClick(mouseButtonEvent: MouseButtonEvent) {
         if (hoveringGuide == null) return
 
-        if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             activeGuide = hoveringGuide
-        } else if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        } else if (mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
             activeGuide = null
         }
     }

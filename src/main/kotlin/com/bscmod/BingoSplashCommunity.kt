@@ -25,7 +25,7 @@ class BingoSplashCommunity : ClientModInitializer {
         settingsKey = KeyMappingHelper.registerKeyMapping(
             KeyMapping(
                 "key.bsc.settings",
-                InputConstants.Type.KEYSYM,
+                InputConstants.Type.KEYBOARD,
                 InputConstants.UNKNOWN.value,
                 KeyMapping.Category.register(Identifier.fromNamespaceAndPath("bsc", "main"))
             )
@@ -104,7 +104,7 @@ class BingoSplashCommunity : ClientModInitializer {
                 if (keyCode == null) {
                     settingsKey!!.setKey(InputConstants.UNKNOWN)
                 } else {
-                    settingsKey!!.setKey(InputConstants.Type.KEYSYM.getOrCreate(keyCode))
+                    settingsKey!!.setKey(InputConstants.Type.KEYBOARD.getOrCreate(keyCode))
                 }
                 KeyMapping.resetMapping()
                 Minecraft.getInstance().options.save()

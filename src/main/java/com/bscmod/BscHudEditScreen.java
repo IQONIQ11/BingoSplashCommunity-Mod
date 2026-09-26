@@ -1,12 +1,12 @@
 package com.bscmod;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
 
 public class BscHudEditScreen extends Screen {
     private final Screen parent;
@@ -167,7 +167,7 @@ public class BscHudEditScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
-        if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (keyEvent.key() == InputConstants.KEY_ESCAPE) {
             this.minecraft.setScreenAndShow(parent);
             return true;
         }

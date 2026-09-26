@@ -1,6 +1,7 @@
 package com.bscmod;
 
-import net.minecraft.util.Util;
+import com.mojang.blaze3d.Blaze3D;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -10,8 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.joml.Vector2f;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -421,11 +422,11 @@ public class BscScreen extends Screen {
 
     @Override public boolean keyPressed(@NonNull KeyEvent keyEvent) {
         if (waitingForKey) {
-            if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) BingoSplashCommunity.updateKeybind(null);
+            if (keyEvent.key() == InputConstants.KEY_ESCAPE) BingoSplashCommunity.updateKeybind(null);
             else BingoSplashCommunity.updateKeybind(keyEvent.key());
             waitingForKey = false; BscConfig.save(); return true;
         }
-        if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) { if (this.minecraft != null) this.minecraft.setScreenAndShow(parent); return true; }
+        if (keyEvent.key() == InputConstants.KEY_ESCAPE) { if (this.minecraft != null) this.minecraft.setScreenAndShow(parent); return true; }
         return super.keyPressed(keyEvent);
     }
 
@@ -488,7 +489,7 @@ public class BscScreen extends Screen {
                 }
             }
         }
-        if (isHovering(mouseButtonEvent.x(), mouseButtonEvent.y(), x + 10, y + windowHeight - 20, 80, 15)) { Util.getPlatform().openUri(DISCORD_URL); return true; }
+        if (isHovering(mouseButtonEvent.x(), mouseButtonEvent.y(), x + 10, y + windowHeight - 20, 80, 15)) { Blaze3D.openUri(URI.create(DISCORD_URL)); return true; }
         return false;
     }
 }
