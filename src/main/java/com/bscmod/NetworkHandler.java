@@ -176,7 +176,7 @@ public class NetworkHandler extends Thread {
             Minecraft mc = Minecraft.getInstance();
             mc.execute(() -> {
                 if (mc.level != null) {
-                    mc.setScreen(new BscBingoCardScreen(player, month, goalsList));
+                    mc.setScreenAndShow(new BscBingoCardScreen(player, month, goalsList));
                 }
             });
             return;
@@ -185,7 +185,7 @@ public class NetworkHandler extends Thread {
         if (type.equals("ERROR")) {
             String error = allParts[1];
             Minecraft.getInstance().execute(() ->
-                    Minecraft.getInstance().getChatListener().handleSystemMessage(Component.literal("§c[BSC] " + error), false)
+                    Minecraft.getInstance().gui.chatListener().handleSystemMessage(Component.literal("§c[BSC] " + error), false)
             );
             return;
         }
@@ -268,7 +268,7 @@ public class NetworkHandler extends Thread {
                 }
             }
 
-            client.getChatListener().handleSystemMessage(mainMsg, false);
+            client.gui.chatListener().handleSystemMessage(mainMsg, false);
 
             if (BscConfig.showTitle) {
                 Component titleText;
@@ -287,9 +287,9 @@ public class NetworkHandler extends Thread {
                 }
 
                 int stayTicks = (int) (BscConfig.alertDuration * 20);
-                client.gui.setTitle(titleText);
-                client.gui.setSubtitle(Component.literal("§f" + actualContent));
-                client.gui.setTimes(10, stayTicks, 20);
+                client.gui.hud.setTitle(titleText);
+                client.gui.hud.setSubtitle(Component.literal("§f" + actualContent));
+                client.gui.hud.setTimes(10, stayTicks, 20);
             }
 
             if (BscConfig.playSound) {

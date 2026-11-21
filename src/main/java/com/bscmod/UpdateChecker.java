@@ -104,7 +104,7 @@ public class UpdateChecker {
         Component message = Component.literal("§b[BSC] §6§lNew update available: §f" + latestVersionTag + " ")
                 .append(downloadComponent);
 
-        mc.getChatListener().handleSystemMessage(message, false);
+        mc.gui.chatListener().handleSystemMessage(message, false);
     }
 
     private enum UpdateCheckState {

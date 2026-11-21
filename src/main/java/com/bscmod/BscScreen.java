@@ -425,7 +425,7 @@ public class BscScreen extends Screen {
             else BingoSplashCommunity.updateKeybind(keyEvent.key());
             waitingForKey = false; BscConfig.save(); return true;
         }
-        if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) { if (this.minecraft != null) this.minecraft.setScreen(parent); return true; }
+        if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) { if (this.minecraft != null) this.minecraft.setScreenAndShow(parent); return true; }
         return super.keyPressed(keyEvent);
     }
 
@@ -449,7 +449,7 @@ public class BscScreen extends Screen {
             int cY = -(int) scrollAmount + 20;
             if (isHovering(relX, relY, tx, cY, 28, 12)) { BscConfig.receivePings = !BscConfig.receivePings; BscConfig.save(); return true; }
             cY += SPACING;
-            if (isHovering(relX, relY, tx - 10, cY, 38, 12)) { if (this.minecraft != null) this.minecraft.setScreen(new BscHudEditScreen(this)); return true; }
+            if (isHovering(relX, relY, tx - 10, cY, 38, 12)) { if (this.minecraft != null) this.minecraft.setScreenAndShow(new BscHudEditScreen(this)); return true; }
             cY += SPACING;
             if (isHovering(relX, relY, tx - 20, cY, 48, 12)) { waitingForKey = true; return true; }
             cY += (SPACING + 30);
